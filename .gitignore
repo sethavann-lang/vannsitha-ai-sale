@@ -1,0 +1,25 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js build output
+/.next/
+/out/
+/build
+
+# Environment files (never commit secrets to GitHub)
+.env
+.env.local
+.env*.local
+
+# Binaries & Archives
+cloudflared
+cloudflared.tgz
+
+# OS & Logs
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*

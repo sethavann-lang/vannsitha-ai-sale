@@ -1,0 +1,404 @@
+import { NextRequest, NextResponse } from "next/server";
+import { WebhookPayload } from "@/types/meta";
+import { replyToComment, sendPrivateReply, sendMessengerMessage } from "@/lib/meta/graph";
+import { getAIProvider, ChatMessage } from "@/lib/ai";
+import { db } from "@/lib/db";
+
+// Fallback config from environment variables for single-page MVP
+const DEFAULT_PAGE_ID = process.env.FB_PAGE_ID || "";
+const DEFAULT_PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN || "";
+const VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN || "chatkh_secret_token";
+
+/**
+ * 1. Webhook Verification (GET)
+ */
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+  const mode = searchParams.get("hub.mode");
+  const token = searchParams.get("hub.verify_token");
+  const challenge = searchParams.get("hub.challenge");
+
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("[Webhook] Verification successful!");
+    return new Response(challenge, { status: 200 });
+  }
+
+  console.warn("[Webhook] Verification failed. Token mismatch.");
+  return new Response("Forbidden", { status: 403 });
+}
+
+/**
+ * Helper to get Page configuration and knowledge base
+ */
+async function getPageConfigWithKnowledge(pageId: string) {
+  try {
+    const config = await db.pageConfig.findUnique({
+      where: { pageId },
+      include: { knowledgeItems: true },
+    });
+
+    if (config) {
+      const knowledgeText = config.knowledgeItems
+        .map((k) => `[${k.category || "General"}] ${k.title}:\n${k.content}`)
+        .join("\n\n");
+      return { config, knowledgeText, token: config.pageAccessToken };
+    }
+  } catch (error) {
+    console.error("[DB] Error fetching PageConfig:", error);
+  }
+
+  // Fallback to default environment variables if not yet in database
+  const defaultKnowledge = process.env.DEFAULT_KNOWLEDGE_BASE || "ហាងយើងខ្ញុំមានលក់សម្លៀកបំពាក់ និងទំនិញគុណភាពខ្ពស់ ដឹកជញ្ជូនឥតគិតថ្លៃគ្រប់ខេត្តក្រុង។";
+  const defaultPrompt = process.env.DEFAULT_SYSTEM_PROMPT || "អ្នកគឺជាជំនួយការលក់ប្រចាំហាង (Sales Assistant) ដែលរួសរាយ រាក់ទាក់ និងឆ្លើយតបជាភាសាខ្មែរ។";
+
+  return {
+    config: {
+      pageId: DEFAULT_PAGE_ID || pageId,
+      systemPrompt: defaultPrompt,
+      autoReplyComment: true,
+      privateReplyComment: true,
+      autoReplyInbox: true,
+    },
+    knowledgeText: defaultKnowledge,
+    token: DEFAULT_PAGE_ACCESS_TOKEN,
+  };
+}
+
+/**
+ * Helper to check deduplication
+ */
+async function isAlreadyProcessed(id: string, eventType: string): Promise<boolean> {
+  try {
+    const existing = await db.processedEvent.findUnique({ where: { id } });
+    if (existing) return true;
+
+    await db.processedEvent.create({
+      data: { id, eventType },
+    });
+    return false;
+  } catch {
+    // If DB is offline, continue without deduplication
+    return false;
+  }
+}
+
+/**
+ * 2. Webhook Event Receiver (POST)
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const body: WebhookPayload = await req.json();
+
+    if (body.object !== "page") {
+      return NextResponse.json({ message: "Unsupported object" }, { status: 404 });
+    }
+
+    const ai = getAIProvider();
+
+    for (const entry of body.entry) {
+      const pageId = entry.id;
+      const { config, knowledgeText, token } = await getPageConfigWithKnowledge(pageId);
+
+      if (!token) {
+        console.warn(`[Webhook] No access token found for Page ID ${pageId}`);
+        continue;
+      }
+
+      // ==========================================
+      // FLOW A: Handle Comments on Posts (feed)
+      // ==========================================
+      if (entry.changes) {
+        for (const change of entry.changes) {
+          if (change.field === "feed") {
+            const val = change.value;
+            const isComment = val.item === "comment" && val.verb === "add";
+
+            if (isComment && val.comment_id && val.message) {
+              const commentId = val.comment_id;
+              const commenterId = val.from?.id;
+
+              // Don't reply to page's own comment
+              if (commenterId === pageId) continue;
+
+              // Deduplication
+              if (await isAlreadyProcessed(commentId, "comment")) {
+                console.log(`[Webhook] Comment ${commentId} already processed. Skipping.`);
+                continue;
+              }
+
+              console.log(`[Webhook] New customer comment: "${val.message}" by ${val.from?.name || commenterId}`);
+
+              // Auto-sync customer to CRM
+              if ((config as any).id && commenterId) {
+                try {
+                  const pageConfigId = (config as any).id;
+                  const customerName = val.from?.name || `Commenter #${commenterId.slice(-4)}`;
+                  const existingCustomer = await db.customer.findFirst({
+                    where: { pageConfigId, facebookId: commenterId },
+                  });
+                  if (!existingCustomer) {
+                    const newLead = await db.customer.create({
+                      data: {
+                        pageConfigId,
+                        name: customerName,
+                        facebookId: commenterId,
+                        source: "COMMENT",
+                        stage: "NEW_LEAD",
+                        lastContactAt: new Date(),
+                        notes: `Commented: "${val.message.slice(0, 100)}"`,
+                      },
+                    });
+
+                    // Telegram Alert for new Comment Lead
+                    import("@/lib/telegram").then(({ notifyNewLeadTelegram }) => {
+                      notifyNewLeadTelegram({
+                        name: customerName,
+                        source: "COMMENT",
+                        stage: "NEW_LEAD",
+                        commentText: val.message,
+                      }).catch((err) => console.warn("[Telegram] Comment alert error:", err));
+                    });
+                  } else {
+                    await db.customer.update({
+                      where: { id: existingCustomer.id },
+                      data: {
+                        lastContactAt: new Date(),
+                        notes: `Last comment: "${val.message.slice(0, 100)}"`,
+                      },
+                    });
+                  }
+                } catch (crmErr) {
+                  console.warn("[CRM] Failed to auto-sync commenter lead:", crmErr);
+                }
+              }
+
+              // 1. AI Public Reply
+              if (config.autoReplyComment) {
+                try {
+                  const publicReplyText = await ai.generateReply({
+                    systemPrompt: config.systemPrompt,
+                    knowledgeBase: knowledgeText,
+                    history: [],
+                    incomingMessage: val.message,
+                    contextType: "comment",
+                  });
+
+                  await replyToComment(commentId, publicReplyText, token);
+                  console.log(`[Webhook] Answered public comment: "${publicReplyText}"`);
+                } catch (err) {
+                  console.error("[Webhook] Failed to reply public comment:", err);
+                }
+              }
+
+              // 2. Private Reply to Messenger
+              if (config.privateReplyComment) {
+                try {
+                  const privateReplyPrompt = `អតិថិជនបាន Comment ថា: "${val.message}"។ សូមសរសេរសារស្វាគមន៍គួរសម ខ្លី និងផ្តល់ព័ត៌មានបន្ថែម ឬសួរថាតើគាត់ចង់ដឹងព័ត៌មានអ្វីខ្លះទៀត ដើម្បីផ្ញើចូល Messenger របស់គាត់។`;
+                  const privateReplyText = await ai.generateReply({
+                    systemPrompt: config.systemPrompt,
+                    knowledgeBase: knowledgeText,
+                    history: [],
+                    incomingMessage: privateReplyPrompt,
+                    contextType: "inbox",
+                  });
+
+                  await sendPrivateReply(commentId, privateReplyText, token);
+                  console.log(`[Webhook] Sent private reply to Messenger: "${privateReplyText}"`);
+                } catch (err) {
+                  console.error("[Webhook] Failed to send private reply:", err);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // ==========================================
+      // FLOW B: Handle Messages in Messenger (messages)
+      // ==========================================
+      if (entry.messaging) {
+        for (const msgEvent of entry.messaging) {
+          const senderPsid = msgEvent.sender.id;
+          const msg = msgEvent.message;
+
+          // Ignore echo messages (messages sent by the page itself)
+          if (!msg || msg.is_echo || !msg.text) continue;
+
+          const mid = msg.mid;
+          if (await isAlreadyProcessed(mid, "message")) {
+            console.log(`[Webhook] Message ${mid} already processed. Skipping.`);
+            continue;
+          }
+
+          console.log(`[Webhook] Incoming Messenger message: "${msg.text}" from PSID: ${senderPsid}`);
+
+          // Fetch chat history and auto-sync customer to CRM
+          let history: ChatMessage[] = [];
+          let conversationId: string | null = null;
+          let conv: any = null;
+
+          // Simple Cambodian phone number regex: e.g. 012345678, +85512345678, 098 765 432
+          const phoneRegex = /(?:0|\+?855)\s*[1-9]\d{1,2}[\s.-]?\d{3}[\s.-]?\d{3,4}/;
+          const phoneMatch = msg.text.match(phoneRegex);
+          const detectedPhone = phoneMatch ? phoneMatch[0].replace(/\s+/g, "") : null;
+
+          try {
+            const pageConfigId = (config as any).id || "default";
+
+            // Find or auto-create Customer in CRM
+            let customer: any = null;
+            if ((config as any).id) {
+              customer = await db.customer.findUnique({
+                where: {
+                  pageConfigId_psid: { pageConfigId, psid: senderPsid },
+                },
+              });
+
+              if (!customer) {
+                customer = await db.customer.create({
+                  data: {
+                    pageConfigId,
+                    name: `Customer #${senderPsid.slice(-6)}`,
+                    psid: senderPsid,
+                    phone: detectedPhone,
+                    source: "MESSENGER",
+                    stage: "NEW_LEAD",
+                    lastContactAt: new Date(),
+                  },
+                });
+
+                // Telegram Alert for new Inbox Lead
+                import("@/lib/telegram").then(({ notifyNewLeadTelegram }) => {
+                  notifyNewLeadTelegram({
+                    name: customer.name,
+                    phone: detectedPhone,
+                    source: "MESSENGER",
+                    stage: "NEW_LEAD",
+                    commentText: text,
+                  }).catch((err) => console.warn("[Telegram] Inbox alert error:", err));
+                });
+              } else {
+                const hadNoPhone = !customer.phone && !!detectedPhone;
+                await db.customer.update({
+                  where: { id: customer.id },
+                  data: {
+                    lastContactAt: new Date(),
+                    ...(detectedPhone && !customer.phone ? { phone: detectedPhone } : {}),
+                  },
+                });
+
+                // Alert if customer just provided their phone number
+                if (hadNoPhone && detectedPhone) {
+                  import("@/lib/telegram").then(({ notifyOrderWonTelegram }) => {
+                    notifyOrderWonTelegram({
+                      name: customer.name,
+                      phone: detectedPhone,
+                      product: customer.productInterest || "Kidney Pro ឃីដនី ប្រូ",
+                      notes: "អតិថិជនបានផ្តល់លេខទូរស័ព្ទក្នុង Messenger Chat",
+                    }).catch((err) => console.warn("[Telegram] Phone captured alert error:", err));
+                  });
+                }
+              }
+            }
+
+            conv = await db.conversation.findUnique({
+              where: {
+                pageConfigId_psid: {
+                  pageConfigId,
+                  psid: senderPsid,
+                },
+              },
+              include: {
+                messages: {
+                  orderBy: { createdAt: "desc" },
+                  take: 6, // Last 6 messages for context
+                },
+              },
+            });
+
+            if (!conv && (config as any).id) {
+              conv = await db.conversation.create({
+                data: {
+                  pageConfigId,
+                  psid: senderPsid,
+                  customerId: customer?.id || null,
+                  customerName: customer?.name || null,
+                },
+                include: { messages: true },
+              });
+            } else if (conv && customer && !conv.customerId) {
+              await db.conversation.update({
+                where: { id: conv.id },
+                data: { customerId: customer.id },
+              });
+            }
+
+            if (conv) {
+              conversationId = conv.id;
+              // Format for AI
+              history = conv.messages
+                .reverse()
+                .map((m: any) => ({
+                  role: m.sender === "USER" ? ("user" as const) : ("model" as const),
+                  content: m.text,
+                }));
+            }
+          } catch (err) {
+            console.warn("[DB] Could not load conversation history or sync customer:", err);
+          }
+
+          // Human Takeover check
+          if (conv?.isAiPaused) {
+            console.log(`[Webhook] AI is paused for customer ${senderPsid} (Human Takeover active). Skipping auto-reply.`);
+            if (conversationId) {
+              await db.message.create({
+                data: { conversationId, sender: "USER", text: msg.text },
+              });
+            }
+            continue;
+          }
+
+          if (!config.autoReplyInbox) {
+            console.log(`[Webhook] autoReplyInbox is turned off. Skipping.`);
+            if (conversationId) {
+              await db.message.create({
+                data: { conversationId, sender: "USER", text: msg.text },
+              });
+            }
+            continue;
+          }
+          try {
+            const aiReply = await ai.generateReply({
+              systemPrompt: config.systemPrompt,
+              knowledgeBase: knowledgeText,
+              history,
+              incomingMessage: msg.text,
+              contextType: "inbox",
+            });
+
+            // Send message back to user in Messenger
+            await sendMessengerMessage(senderPsid, aiReply, token);
+            console.log(`[Webhook] Sent Messenger reply: "${aiReply}"`);
+
+            // Save conversation to DB
+            if (conversationId) {
+              await db.message.createMany({
+                data: [
+                  { conversationId, sender: "USER", text: msg.text },
+                  { conversationId, sender: "AI", text: aiReply },
+                ],
+              });
+            }
+          } catch (err) {
+            console.error("[Webhook] Failed to generate or send Messenger reply:", err);
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({ status: "EVENT_RECEIVED" }, { status: 200 });
+  } catch (error: any) {
+    console.error("[Webhook Error]:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum LeadStage {
+  NEW_LEAD
+  INTERESTED
+  HOT_LEAD
+  FOLLOW_UP
+  ORDERED
+  LOST
+}
+
+enum LeadSource {
+  COMMENT
+  MESSENGER
+}
+
+enum FollowUpReason {
+  PRICE_OBJECTION
+  NEED_TO_THINK
+  NO_RESPONSE
+  WAITING_SALARY
+  ASK_FAMILY
+  INTERESTED_NOT_READY
+  OTHER
+}
+
+enum FollowUpStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  OVERDUE
+}
+
+// 1. Facebook Page Configuration & Knowledge
+model PageConfig {
+  id                  String          @id @default(cuid())
+  pageId              String          @unique // Facebook Page ID (e.g. 10482910...)
+  pageName            String?
+  pageAccessToken     String          // Page Access Token for Graph API calls
+  systemPrompt        String          @default("អ្នកគឺជាជំនួយការលក់ប្រចាំហាង (Sales Assistant) ដែលរួសរាយ រាក់ទាក់ និងឆ្លើយតបអតិថិជនជាភាសាខ្មែរបានយ៉ាងច្បាស់លាស់។ សូមឆ្លើយតបឲ្យខ្លី ខ្លឹម គួរសម និងត្រឹមត្រូវតាមព័ត៌មានទំនិញដែលបានផ្តល់ជូន។")
+  isActive            Boolean         @default(true)
+  autoReplyComment    Boolean         @default(true)
+  privateReplyComment Boolean         @default(true)
+  autoReplyInbox      Boolean         @default(true)
+  knowledgeItems      KnowledgeItem[]
+  conversations       Conversation[]
+  customers           Customer[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+// 2. Knowledge Base (Products, Prices, FAQs)
+model KnowledgeItem {
+  id           String      @id @default(cuid())
+  pageConfigId String
+  pageConfig   PageConfig  @relation(fields: [pageConfigId], references: [id], onDelete: Cascade)
+  title        String      // e.g. "អាវយឺតដៃខ្លី Cotton"
+  category     String?     // e.g. "Product", "Promotion", "Shipping", "FAQ"
+  content      String      // Details, price, colors, sizes, shipping info
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+// 3. Customers / CRM Leads
+model Customer {
+  id              String         @id @default(cuid())
+  pageConfigId    String
+  pageConfig      PageConfig     @relation(fields: [pageConfigId], references: [id], onDelete: Cascade)
+  name            String
+  facebookId      String?        // Facebook User ID (from comments)
+  psid            String?        // Page-Scoped ID (for Messenger)
+  phone           String?
+  source          LeadSource     @default(MESSENGER)
+  productInterest String?
+  stage           LeadStage      @default(NEW_LEAD)
+  assignedSeller  String?
+  notes           String?
+  lastContactAt   DateTime       @default(now())
+  nextFollowUpAt  DateTime?
+  conversations   Conversation[]
+  followUps       FollowUpTask[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([pageConfigId, psid])
+  @@index([stage])
+  @@index([nextFollowUpAt])
+}
+
+// 4. Messenger Conversations (Chat Sessions)
+model Conversation {
+  id           String      @id @default(cuid())
+  pageConfigId String
+  pageConfig   PageConfig  @relation(fields: [pageConfigId], references: [id], onDelete: Cascade)
+  customerId   String?
+  customer     Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  psid         String      // Page-Scoped User ID from Messenger
+  customerName String?
+  isAiPaused   Boolean     @default(false)
+  messages     Message[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([pageConfigId, psid])
+}
+
+// 5. Chat Messages History for AI context memory
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         String       // "USER" or "AI"
+  text           String
+  createdAt      DateTime     @default(now())
+}
+
+// 6. Follow-Up Engine Tasks
+model FollowUpTask {
+  id              String          @id @default(cuid())
+  customerId      String
+  customer        Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  scheduledAt     DateTime
+  reason          FollowUpReason
+  customReason    String?
+  status          FollowUpStatus  @default(PENDING)
+  aiSuggestedText String?
+  actualSentText  String?
+  sentAt          DateTime?
+  sentBy          String?
+  outcomeNotes    String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([scheduledAt, status])
+}
+
+// 7. Deduplication of Webhook Events (Comment IDs & Message IDs)
+model ProcessedEvent {
+  id        String   @id // Webhook event ID, comment ID, or message mid
+  eventType String   // "comment" or "message"
+  createdAt DateTime @default(now())
+}
