@@ -50,27 +50,32 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] flex items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#fcf9f5] via-[#faf6ef] to-[#f4ebe1] flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Background Glow */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-orange-400/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-md w-full relative z-10">
         {/* Brand Header */}
         <div className="text-center mb-8 space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-amber-400 via-amber-500 to-amber-600 shadow-xl shadow-amber-500/20 text-white mb-2 ring-4 ring-amber-400/20">
-            <Sparkles className="w-8 h-8 text-amber-50" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 shadow-xl shadow-orange-500/25 text-white mb-2 ring-4 ring-amber-300/40">
+            <Sparkles className="w-8 h-8 text-white drop-shadow-xs" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            VANN SITHA <span className="text-amber-400">AI SALE</span>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight flex items-center justify-center gap-2 flex-wrap">
+            <span className="bg-gradient-to-r from-[#ea580c] via-[#f59e0b] to-[#eab308] bg-clip-text text-transparent drop-shadow-xs">
+              VANN SITHA
+            </span>
+            <span className="bg-gradient-to-r from-[#ea580c] to-[#f59e0b] bg-clip-text text-transparent">
+              AI SALE
+            </span>
           </h1>
-          <p className="text-slate-400 text-sm font-medium">
+          <p className="text-amber-900/70 text-sm font-semibold">
             ប្រព័ន្ធគ្រប់គ្រងការលក់ និង CRM ឆ្លាតវៃ (Owner Portal)
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-7 sm:p-9 shadow-2xl border border-amber-200/40 space-y-6">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-7 sm:p-9 shadow-2xl shadow-amber-900/10 border border-amber-200/80 space-y-6">
           <div className="space-y-1.5 text-center">
             <h2 className="text-xl font-bold text-slate-900">
               ចូលគ្រប់គ្រងប្រព័ន្ធ
@@ -145,7 +150,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 bg-linear-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold text-sm sm:text-base rounded-xl transition shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 group disabled:opacity-60 cursor-pointer"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-orange-500 via-amber-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-sm sm:text-base rounded-xl transition shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 group disabled:opacity-60 cursor-pointer"
             >
               {loading ? (
                 <span>កំពុងផ្ទៀងផ្ទាត់...</span>
