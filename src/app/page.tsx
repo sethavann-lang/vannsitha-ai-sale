@@ -247,6 +247,7 @@ export default function Dashboard() {
     | "pipeline"
     | "followups"
     | "conversations"
+    | "content"
     | "knowledge"
     | "automation"
     | "ads"
@@ -369,6 +370,124 @@ export default function Dashboard() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  // --- Content Studio (បង្កើតមាតិកា) State & Handlers ---
+  const [contentTab, setContentTab] = useState<"create" | "scheduled">("create");
+  const [contentTopic, setContentTopic] = useState("");
+  const [contentTone, setContentTone] = useState<
+    "HEALTH_TIP" | "PRODUCT_BENEFIT" | "TESTIMONIAL" | "PROMOTION"
+  >("HEALTH_TIP");
+  const [contentCaption, setContentCaption] = useState("");
+  const [contentImageUrl, setContentImageUrl] = useState("");
+  const [contentGenerating, setContentGenerating] = useState(false);
+  const [contentPublishing, setContentPublishing] = useState(false);
+  const [contentPublishSuccess, setContentPublishSuccess] = useState("");
+  const [contentPublishError, setContentPublishError] = useState("");
+  const [contentScheduleMode, setContentScheduleMode] = useState<"now" | "schedule">("now");
+  const [contentScheduleDateTime, setContentScheduleDateTime] = useState("");
+
+  const [publishedPosts, setPublishedPosts] = useState<any[]>([]);
+  const [scheduledPosts, setScheduledPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
+  const fetchFacebookPosts = async () => {
+    try {
+      setLoadingPosts(true);
+      const res = await fetch("/api/content/posts");
+      const data = await res.json();
+      if (data.success) {
+        setPublishedPosts(data.published || []);
+        setScheduledPosts(data.scheduled || []);
+      }
+    } catch (e) {
+      console.error("Error fetching posts:", e);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  const handleGenerateContent = async (overrideTopic?: string, overrideTone?: any) => {
+    const t = overrideTopic !== undefined ? overrideTopic : contentTopic;
+    const toneToUse = overrideTone || contentTone;
+    try {
+      setContentGenerating(true);
+      setContentPublishError("");
+      setContentPublishSuccess("");
+      const res = await fetch("/api/content/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: t,
+          tone: toneToUse,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.caption) {
+        setContentCaption(data.caption);
+      } else {
+        setContentPublishError(data.error || "មិនអាចបង្កើត Caption បានទេ");
+      }
+    } catch (e: any) {
+      setContentPublishError(e.message || "មានបញ្ហាបច្ចេកទេស");
+    } finally {
+      setContentGenerating(false);
+    }
+  };
+
+  const handlePublishPost = async () => {
+    if (!contentCaption.trim() && !contentImageUrl.trim()) {
+      setContentPublishError(
+        lang === "km"
+          ? "សូមបញ្ចូល Caption ឬជ្រើសរើសរូបភាពដើម្បីផុស"
+          : "Please enter caption or select an image to post"
+      );
+      return;
+    }
+    try {
+      setContentPublishing(true);
+      setContentPublishError("");
+      setContentPublishSuccess("");
+
+      const payload: any = {
+        message: contentCaption,
+        imageUrl: contentImageUrl,
+      };
+
+      if (contentScheduleMode === "schedule") {
+        if (!contentScheduleDateTime) {
+          setContentPublishError(
+            lang === "km"
+              ? "សូមជ្រើសរើសថ្ងៃ និងម៉ោងត្រូវផុស"
+              : "Please select schedule date & time"
+          );
+          setContentPublishing(false);
+          return;
+        }
+        payload.scheduledTime = new Date(contentScheduleDateTime).toISOString();
+      }
+
+      const res = await fetch("/api/content/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setContentPublishSuccess(
+          data.message ||
+            (lang === "km" ? "បានបញ្ជូនដោយជោគជ័យ!" : "Published successfully!")
+        );
+        fetchFacebookPosts();
+      } else {
+        setContentPublishError(data.error || "មានបញ្ហាក្នុងការផុស");
+      }
+    } catch (e: any) {
+      setContentPublishError(e.message || "មានបញ្ហាបច្ចេកទេស");
+    } finally {
+      setContentPublishing(false);
+    }
+  };
 
   // Current Logged-in User & Staff Management
   const [currentUser, setCurrentUser] = useState<{
@@ -937,6 +1056,12 @@ export default function Dashboard() {
   }, [activeNav, currentUser]);
 
   useEffect(() => {
+    if (activeNav === "content") {
+      fetchFacebookPosts();
+    }
+  }, [activeNav]);
+
+  useEffect(() => {
     fetchCustomers();
   }, [crmStageFilter, crmSearch]);
 
@@ -1250,9 +1375,10 @@ export default function Dashboard() {
               badge: followUpMetrics.overdueCount > 0 ? followUpMetrics.overdueCount : null,
             },
             { id: "conversations", label: t.navInbox, icon: MessageSquare },
+            { id: "content", label: t.navContent, icon: Megaphone },
             { id: "knowledge", label: t.navKnowledge, icon: BookOpen },
             { id: "automation", label: t.navAutomation, icon: Sliders },
-            { id: "ads", label: t.navAds, icon: Megaphone, tag: t.comingSoon },
+            { id: "ads", label: t.navAds, icon: Radio, tag: t.comingSoon },
           ].map((item) => {
             const active = activeNav === item.id;
             const Icon = item.icon;
@@ -1385,9 +1511,10 @@ export default function Dashboard() {
                   badge: followUpMetrics.overdueCount > 0 ? followUpMetrics.overdueCount : null,
                 },
                 { id: "conversations", label: t.navInbox, icon: MessageSquare },
+                { id: "content", label: t.navContent, icon: Megaphone },
                 { id: "knowledge", label: t.navKnowledge, icon: BookOpen },
                 { id: "automation", label: t.navAutomation, icon: Sliders },
-                { id: "ads", label: t.navAds, icon: Megaphone, tag: t.comingSoon },
+                { id: "ads", label: t.navAds, icon: Radio, tag: t.comingSoon },
               ].map((item) => {
                 const active = activeNav === item.id;
                 const Icon = item.icon;
@@ -1505,6 +1632,7 @@ export default function Dashboard() {
               {activeNav === "pipeline" && t.navPipeline}
               {activeNav === "followups" && t.navFollowups}
               {activeNav === "conversations" && t.navInbox}
+              {activeNav === "content" && t.navContent}
               {activeNav === "knowledge" && t.navKnowledge}
               {activeNav === "automation" && t.navAutomation}
               {activeNav === "ads" && (lang === "km" ? "ការផ្សាយពាណិជ្ជកម្ម" : "Meta Ads Manager")}
@@ -2846,6 +2974,657 @@ export default function Dashboard() {
               ) : (
                 <div className="hidden md:flex flex-1 items-center justify-center text-slate-400 text-[15px] p-8">
                   {lang === "km" ? "សូមជ្រើសរើសការសន្ទនាដើម្បីមើលសារ" : "Select a conversation to view messages"}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* TAB 5.5: CONTENT STUDIO (បង្កើតមាតិកា) */}
+          {/* ========================================================= */}
+          {activeNav === "content" && (
+            <div className="space-y-6">
+              {/* Studio Header Card */}
+              <div className="bg-white p-6 sm:p-7 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-sm">
+                      <Megaphone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-slate-900 text-[20px] leading-tight">
+                        {lang === "km" ? "ស្ទូឌីយោបង្កើតមាតិកា" : "Content Studio"}
+                      </h3>
+                      <p className="text-[13px] text-slate-500">
+                        {lang === "km"
+                          ? "បង្កើតអត្ថបទផ្សព្វផ្សាយដោយ AI និងកំណត់កាលវិភាគផុសស្វ័យប្រវត្តិចូល Facebook Page"
+                          : "AI post generation and automated post scheduling to Facebook Page"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[13px] font-bold shadow-2xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>{pageConfig?.pageName || "Kidney Pro ឃីដនី ប្រូ"}</span>
+                  </div>
+
+                  {/* Sub-tab pills */}
+                  <div className="flex items-center p-1 bg-amber-100/60 rounded-xl border border-amber-200/70">
+                    <button
+                      type="button"
+                      onClick={() => setContentTab("create")}
+                      className={`px-3.5 py-1.5 rounded-lg text-[13.5px] font-bold transition cursor-pointer ${
+                        contentTab === "create"
+                          ? "bg-white text-orange-700 shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      {lang === "km" ? "✨ បង្កើត & កំណត់ពេលផុស" : "✨ Create & Schedule"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setContentTab("scheduled");
+                        fetchFacebookPosts();
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg text-[13.5px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        contentTab === "scheduled"
+                          ? "bg-white text-orange-700 shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      <span>{lang === "km" ? "📋 កាលវិភាគ & ផុសលើផេក" : "📋 Posts & Schedule"}</span>
+                      {(scheduledPosts.length > 0 || publishedPosts.length > 0) && (
+                        <span className="px-1.5 py-0.2 rounded-full bg-orange-100 text-orange-700 text-[11px] font-bold">
+                          {scheduledPosts.length + publishedPosts.length}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Alert notifications */}
+              {contentPublishSuccess && (
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold text-[14px] flex items-center justify-between shadow-2xs animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>{contentPublishSuccess}</span>
+                  </div>
+                  <button
+                    onClick={() => setContentPublishSuccess("")}
+                    className="text-emerald-700 hover:text-emerald-900 text-[13px] font-bold cursor-pointer"
+                  >
+                    {lang === "km" ? "បិទ" : "Dismiss"}
+                  </button>
+                </div>
+              )}
+
+              {contentPublishError && (
+                <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 font-semibold text-[14px] flex items-center justify-between shadow-2xs animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+                    <span>{contentPublishError}</span>
+                  </div>
+                  <button
+                    onClick={() => setContentPublishError("")}
+                    className="text-rose-700 hover:text-rose-900 text-[13px] font-bold cursor-pointer"
+                  >
+                    {lang === "km" ? "បិទ" : "Dismiss"}
+                  </button>
+                </div>
+              )}
+
+              {/* TAB 1: CREATE & SCHEDULE */}
+              {contentTab === "create" && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  {/* Left Column: AI Post Composer (7 cols) */}
+                  <div className="lg:col-span-7 bg-white p-6 sm:p-7 rounded-2xl border border-amber-200/80 shadow-xs space-y-5">
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-[16px] mb-1">
+                        {lang === "km" ? "១. ជ្រើសរើសទម្រង់មាតិកា (Tone / Angle)" : "1. Select Content Tone"}
+                      </h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1.5">
+                        {[
+                          {
+                            id: "HEALTH_TIP",
+                            km: "🩺 ចែករំលែកសុខភាព",
+                            en: "🩺 Health Tips",
+                          },
+                          {
+                            id: "PRODUCT_BENEFIT",
+                            km: "💊 គុណសម្បត្តិផលិតផល",
+                            en: "💊 Benefits",
+                          },
+                          {
+                            id: "TESTIMONIAL",
+                            km: "💬 បទពិសោធន៍ភ្ញៀវ",
+                            en: "💬 Testimonial",
+                          },
+                          {
+                            id: "PROMOTION",
+                            km: "🎁 ប្រូម៉ូសិនពិសេស",
+                            en: "🎁 Promotion",
+                          },
+                        ].map((tItem) => (
+                          <button
+                            key={tItem.id}
+                            type="button"
+                            onClick={() => setContentTone(tItem.id as any)}
+                            className={`p-2.5 rounded-xl border text-[13px] font-bold transition text-center cursor-pointer ${
+                              contentTone === tItem.id
+                                ? "bg-orange-50 border-orange-500 text-orange-700 shadow-2xs ring-1 ring-orange-400"
+                                : "bg-white border-amber-200/80 text-slate-700 hover:bg-orange-50/50"
+                            }`}
+                          >
+                            {lang === "km" ? tItem.km : tItem.en}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Step 2: Topic & Generate Button */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="font-bold text-slate-800 text-[16px]">
+                          {lang === "km" ? "២. ប្រធានបទ ឬគំនិតដែលចង់ផុស" : "2. Topic or Main Idea"}
+                        </label>
+                        <span className="text-[12px] text-slate-400 font-medium">
+                          {lang === "km" ? "អាចវាយ ឬចុចជ្រើសរើសខាងក្រោម" : "Type or click below"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={contentTopic}
+                          onChange={(e) => setContentTopic(e.target.value)}
+                          placeholder={
+                            lang === "km"
+                              ? "ឧ. រោគសញ្ញានោមញឹក និងវិធីថែទាំតម្រងនោម ឬ ប្រូម៉ូសិនទិញ ២ ថែម ១..."
+                              : "e.g. Frequent urination symptoms or Buy 2 Get 1 Free Promo..."
+                          }
+                          className="flex-1 px-4 py-2.5 rounded-xl border border-amber-200 bg-[#fffdfa] focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[14px]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateContent()}
+                          disabled={contentGenerating}
+                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-[14px] shadow-sm flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 whitespace-nowrap active:scale-98"
+                        >
+                          <Sparkles className={`w-4 h-4 ${contentGenerating ? "animate-spin" : "animate-pulse"}`} />
+                          <span>
+                            {contentGenerating
+                              ? (lang === "km" ? "កំពុងតែង..." : "Generating...")
+                              : (lang === "km" ? "✨ AI ជួយតែង Caption" : "✨ AI Generate")}
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* Topic Quick Chips */}
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {[
+                          { km: "នោមញឹក នោមក្រហាយ", en: "Frequent urination", tone: "HEALTH_TIP" },
+                          { km: "ថែទាំតម្រងនោម និងកម្លាំង", en: "Kidney Health", tone: "PRODUCT_BENEFIT" },
+                          { km: "ប្រូម៉ូសិន ២ ថែម ១ ហ្វ្រីដឹក", en: "Promo 2+1 Free Shipping", tone: "PROMOTION" },
+                          { km: "រឿងរ៉ាវអតិថិជនធូរស្បើយ", en: "Customer Recovery Story", tone: "TESTIMONIAL" },
+                        ].map((chip, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setContentTopic(lang === "km" ? chip.km : chip.en);
+                              setContentTone(chip.tone as any);
+                              handleGenerateContent(lang === "km" ? chip.km : chip.en, chip.tone);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-orange-50/70 hover:bg-orange-100 border border-orange-200/60 text-orange-800 text-[12px] font-semibold transition cursor-pointer flex items-center gap-1"
+                          >
+                            <span>+</span>
+                            <span>{lang === "km" ? chip.km : chip.en}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Step 3: Caption Editor */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="font-bold text-slate-800 text-[16px]">
+                          {lang === "km" ? "៣. អត្ថបទ Caption (អាចកែសម្រួលតាមចិត្ត)" : "3. Post Caption"}
+                        </label>
+                        <span className="text-[12px] text-slate-400 font-mono">
+                          {contentCaption.length} {lang === "km" ? "តួអក្សរ" : "chars"}
+                        </span>
+                      </div>
+                      <textarea
+                        rows={8}
+                        value={contentCaption}
+                        onChange={(e) => setContentCaption(e.target.value)}
+                        placeholder={
+                          lang === "km"
+                            ? "អត្ថបទ Caption នឹងបង្ហាញនៅទីនេះក្រោយពេល AI តែង ឬបងអាចវាយបញ្ចូលដោយផ្ទាល់..."
+                            : "Caption text will appear here after AI generation or you can type directly..."
+                        }
+                        className="w-full p-4 rounded-xl border border-amber-200/90 bg-[#fffdfa] focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[14px] leading-relaxed resize-y font-normal"
+                      />
+                    </div>
+
+                    {/* Step 4: Poster / Image selection */}
+                    <div className="space-y-2">
+                      <label className="font-bold text-slate-800 text-[16px] block">
+                        {lang === "km" ? "៤. រូបភាព Poster (ភ្ជាប់ជាមួយ Post)" : "4. Poster / Image"}
+                      </label>
+                      <input
+                        type="url"
+                        value={contentImageUrl}
+                        onChange={(e) => setContentImageUrl(e.target.value)}
+                        placeholder="https://... (Link រូបភាព Poster)"
+                        className="w-full px-4 py-2.5 rounded-xl border border-amber-200 bg-[#fffdfa] focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[13.5px] font-mono"
+                      />
+
+                      {/* Posters from Knowledge Base */}
+                      {pageConfig?.knowledgeItems && pageConfig.knowledgeItems.some((k) => k.imageUrl) && (
+                        <div className="pt-1.5 space-y-1.5">
+                          <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider block">
+                            {lang === "km" ? "ជ្រើសរើសរូបពី Knowledge Base:" : "Select from Knowledge Base:"}
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {pageConfig.knowledgeItems
+                              .filter((k) => k.imageUrl)
+                              .map((k) => {
+                                const isSelected = contentImageUrl === k.imageUrl;
+                                return (
+                                  <button
+                                    key={k.id}
+                                    type="button"
+                                    onClick={() => setContentImageUrl(k.imageUrl || "")}
+                                    className={`relative rounded-xl overflow-hidden border-2 transition cursor-pointer p-0.5 ${
+                                      isSelected
+                                        ? "border-orange-500 ring-2 ring-orange-300 shadow-xs"
+                                        : "border-amber-200/80 hover:border-orange-300"
+                                    }`}
+                                    title={k.title}
+                                  >
+                                    <img
+                                      src={k.imageUrl || ""}
+                                      alt={k.title}
+                                      className="w-16 h-16 object-cover rounded-lg"
+                                      onError={(e: any) => {
+                                        e.currentTarget.style.display = "none";
+                                      }}
+                                    />
+                                    {isSelected && (
+                                      <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-orange-600 text-white flex items-center justify-center text-[10px]">
+                                        ✓
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Step 5: Publishing Schedule Mode */}
+                    <div className="space-y-3 pt-2 border-t border-amber-100">
+                      <label className="font-bold text-slate-800 text-[16px] block">
+                        {lang === "km" ? "៥. ជម្រើសនៃការផុស (Publishing Option)" : "5. Publishing Option"}
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label
+                          className={`p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
+                            contentScheduleMode === "now"
+                              ? "bg-orange-50/80 border-orange-500 shadow-2xs"
+                              : "bg-white border-amber-200/80 hover:bg-orange-50/40"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="publishMode"
+                            checked={contentScheduleMode === "now"}
+                            onChange={() => setContentScheduleMode("now")}
+                            className="w-4 h-4 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                          />
+                          <div>
+                            <div className="text-[14px] font-bold text-slate-800 flex items-center gap-1.5">
+                              <span>⚡</span>
+                              <span>{lang === "km" ? "ផុសភ្លាមៗ" : "Publish Now"}</span>
+                            </div>
+                            <div className="text-[12px] text-slate-500">
+                              {lang === "km" ? "បញ្ជូនចូល Facebook Page ភ្លាម" : "Publish to page immediately"}
+                            </div>
+                          </div>
+                        </label>
+
+                        <label
+                          className={`p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
+                            contentScheduleMode === "schedule"
+                              ? "bg-orange-50/80 border-orange-500 shadow-2xs"
+                              : "bg-white border-amber-200/80 hover:bg-orange-50/40"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="publishMode"
+                            checked={contentScheduleMode === "schedule"}
+                            onChange={() => setContentScheduleMode("schedule")}
+                            className="w-4 h-4 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                          />
+                          <div>
+                            <div className="text-[14px] font-bold text-slate-800 flex items-center gap-1.5">
+                              <span>📅</span>
+                              <span>{lang === "km" ? "កំណត់កាលវិភាគផុស" : "Schedule Post"}</span>
+                            </div>
+                            <div className="text-[12px] text-slate-500">
+                              {lang === "km" ? "កំណត់ថ្ងៃ និងម៉ោងផុសស្វ័យប្រវត្តិ" : "Auto-publish at specific time"}
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+
+                      {/* Date & Time Picker when Schedule is selected */}
+                      {contentScheduleMode === "schedule" && (
+                        <div className="p-4 bg-orange-50/60 rounded-xl border border-orange-200 space-y-2 animate-in fade-in duration-150">
+                          <label className="text-[13px] font-bold text-orange-950 block">
+                            {lang === "km"
+                              ? "ជ្រើសរើសថ្ងៃ និងម៉ោងត្រូវផុស (យ៉ាងតិច ១០ នាទីទៅមុខ):"
+                              : "Select publication date & time (at least 10 mins ahead):"}
+                          </label>
+                          <input
+                            type="datetime-local"
+                            value={contentScheduleDateTime}
+                            min={new Date(Date.now() + 15 * 60 * 1000).toISOString().slice(0, 16)}
+                            onChange={(e) => setContentScheduleDateTime(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl border border-orange-300 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[14px] font-semibold cursor-pointer"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Submit Action Button */}
+                    <div className="pt-3">
+                      <button
+                        type="button"
+                        onClick={handlePublishPost}
+                        disabled={contentPublishing || (!contentCaption.trim() && !contentImageUrl.trim())}
+                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-[16px] shadow-sm hover:shadow-md disabled:opacity-40 transition active:scale-98 cursor-pointer flex items-center justify-center gap-2.5"
+                      >
+                        {contentPublishing ? (
+                          <>
+                            <RefreshCw className="w-5 h-5 animate-spin" />
+                            <span>
+                              {contentScheduleMode === "schedule"
+                                ? (lang === "km" ? "កំពុងកំណត់កាលវិភាគ..." : "Scheduling...")
+                                : (lang === "km" ? "កំពុងផុសចូល Facebook..." : "Publishing to Facebook...")}
+                            </span>
+                          </>
+                        ) : contentScheduleMode === "schedule" ? (
+                          <>
+                            <Calendar className="w-5 h-5" />
+                            <span>{lang === "km" ? "📅 កំណត់កាលវិភាគផុសស្វ័យប្រវត្តិ" : "📅 Schedule Automated Post"}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-5 h-5" />
+                            <span>{lang === "km" ? "🚀 ផុសចូល Facebook Page ឥឡូវនេះ" : "🚀 Publish to Facebook Page Now"}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Facebook Live Mockup Preview (5 cols) */}
+                  <div className="lg:col-span-5 sticky top-24 space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-[13px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <Eye className="w-4 h-4 text-orange-600" />
+                        <span>{lang === "km" ? "ទិដ្ឋភាពជាក់ស្តែងលើ Facebook" : "Facebook Feed Preview"}</span>
+                      </span>
+                      <span className="text-[11.5px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-200">
+                        Live Preview
+                      </span>
+                    </div>
+
+                    {/* Realistic Facebook Post Card */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden text-slate-900 font-sans">
+                      {/* Post Header */}
+                      <div className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-xs">
+                            KP
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-[14.5px] text-slate-900 leading-tight">
+                                {pageConfig?.pageName || "Kidney Pro ឃីដនី ប្រូ"}
+                              </span>
+                              <span className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-bold">
+                                ✓
+                              </span>
+                            </div>
+                            <div className="text-[11.5px] text-slate-500 flex items-center gap-1 mt-0.5 font-medium">
+                              <span>
+                                {contentScheduleMode === "schedule" && contentScheduleDateTime
+                                  ? `${new Date(contentScheduleDateTime).toLocaleDateString()} ${new Date(contentScheduleDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                  : (lang === "km" ? "ទើបតែឥឡូវនេះ" : "Just now")}
+                              </span>
+                              <span>•</span>
+                              <Globe className="w-3 h-3 text-slate-400" />
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-slate-400 font-bold text-lg cursor-default">•••</span>
+                      </div>
+
+                      {/* Post Caption */}
+                      <div className="px-4 pb-3">
+                        <p className="text-[14px] text-slate-800 leading-relaxed whitespace-pre-wrap">
+                          {contentCaption || (
+                            <span className="text-slate-400 italic">
+                              {lang === "km"
+                                ? "អត្ថបទ Caption នឹងបង្ហាញនៅត្រង់នេះដូចពេលផុសលើ Facebook Page ពិតប្រាកដ..."
+                                : "Caption will be rendered here exactly as it appears on Facebook..."}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+
+                      {/* Attached Image */}
+                      {contentImageUrl && (
+                        <div className="w-full bg-slate-100 border-t border-b border-slate-100 max-h-[380px] overflow-hidden flex items-center justify-center">
+                          <img
+                            src={contentImageUrl}
+                            alt="Facebook Post Media"
+                            className="w-full h-auto max-h-[380px] object-cover"
+                            onError={(e: any) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Fake Engagement Bar */}
+                      <div className="px-4 py-2 flex items-center justify-between text-[12px] text-slate-500 border-b border-slate-100">
+                        <div className="flex items-center gap-1">
+                          <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px]">
+                            👍
+                          </span>
+                          <span className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] -ml-2">
+                            ❤️
+                          </span>
+                          <span className="ml-1 font-medium">២៤</span>
+                        </div>
+                        <div className="flex items-center gap-3 font-medium">
+                          <span>៧ មតិ</span>
+                          <span>៣ ចែករំលែក</span>
+                        </div>
+                      </div>
+
+                      {/* Fake Action Buttons */}
+                      <div className="px-2 py-1.5 grid grid-cols-3 gap-1 text-[13px] font-semibold text-slate-600">
+                        <div className="py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-slate-100 transition cursor-default">
+                          <span>👍</span>
+                          <span>{lang === "km" ? "ចូលចិត្ត" : "Like"}</span>
+                        </div>
+                        <div className="py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-slate-100 transition cursor-default">
+                          <span>💬</span>
+                          <span>{lang === "km" ? "មតិ" : "Comment"}</span>
+                        </div>
+                        <div className="py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-slate-100 transition cursor-default">
+                          <span>↗️</span>
+                          <span>{lang === "km" ? "ចែករំលែក" : "Share"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: SCHEDULED & PUBLISHED POSTS */}
+              {contentTab === "scheduled" && (
+                <div className="space-y-6">
+                  {/* Action Bar */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-[18px]">
+                        {lang === "km" ? "កាលវិភាគ & ផុសលើ Facebook Page" : "Scheduled & Published Posts"}
+                      </h4>
+                      <p className="text-[13px] text-slate-500">
+                        {lang === "km"
+                          ? "ទាញទិន្នន័យផ្ទាល់ពី Facebook Graph API នៃផេក Kidney Pro"
+                          : "Live data directly from Facebook Graph API"}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={fetchFacebookPosts}
+                      disabled={loadingPosts}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-200 bg-white hover:bg-orange-50 text-slate-700 font-semibold text-[13.5px] transition shadow-2xs cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 text-orange-600 ${loadingPosts ? "animate-spin" : ""}`} />
+                      <span>{lang === "km" ? "ផ្ទុកទិន្នន័យឡើងវិញ" : "Refresh"}</span>
+                    </button>
+                  </div>
+
+                  {/* Section 1: Scheduled Posts */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                      <h5 className="font-bold text-slate-800 text-[16px]">
+                        {lang === "km" ? "កាលវិភាគកំពុងរង់ចាំផុស (Scheduled Posts)" : "Pending Scheduled Posts"}
+                      </h5>
+                      <span className="px-2 py-0.2 rounded-full bg-purple-100 text-purple-800 text-[11px] font-extrabold">
+                        {scheduledPosts.length}
+                      </span>
+                    </div>
+
+                    {scheduledPosts.length === 0 ? (
+                      <div className="p-6 bg-white rounded-2xl border border-amber-200/80 text-center shadow-2xs">
+                        <Clock className="w-8 h-8 text-amber-300 mx-auto mb-1.5 opacity-70" />
+                        <p className="text-slate-600 font-bold text-[14px]">
+                          {lang === "km" ? "មិនទាន់មានផុសណាដែលបានកំណត់កាលវិភាគនៅឡើយទេ" : "No scheduled posts currently"}
+                        </p>
+                        <p className="text-slate-400 text-[12px] mt-0.5">
+                          {lang === "km"
+                            ? "បងអាចចូលទៅកាន់ផ្ទាំង \"បង្កើត & កំណត់ពេលផុស\" ដើម្បីកំណត់ម៉ោងផុសស្វ័យប្រវត្តិ"
+                            : "Switch to Create & Schedule tab to schedule an automated post"}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {scheduledPosts.map((sp: any) => (
+                          <div
+                            key={sp.id}
+                            className="bg-white p-5 rounded-2xl border border-purple-200 shadow-2xs space-y-3 relative overflow-hidden"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[11.5px] font-bold flex items-center gap-1.5">
+                                <Clock className="w-3 h-3" />
+                                <span>
+                                  {sp.scheduled_publish_time
+                                    ? new Date(sp.scheduled_publish_time * 1000).toLocaleString()
+                                    : "Scheduled"}
+                                </span>
+                              </span>
+                              <span className="text-[11px] font-mono text-slate-400">ID: {sp.id?.slice(-8)}</span>
+                            </div>
+
+                            <p className="text-[13.5px] text-slate-800 line-clamp-3 leading-relaxed whitespace-pre-wrap">
+                              {sp.message || (lang === "km" ? "(ផុសរូបភាព)" : "(Photo post)")}
+                            </p>
+
+                            {sp.full_picture && (
+                              <img
+                                src={sp.full_picture}
+                                alt="Scheduled Media"
+                                className="w-full h-36 object-cover rounded-xl border border-slate-100"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section 2: Recently Published Posts on Page */}
+                  <div className="space-y-3 pt-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <h5 className="font-bold text-slate-800 text-[16px]">
+                        {lang === "km" ? "ផុសដែលបានចេញផ្សាយលើផេក (Published Posts)" : "Published Posts on Page"}
+                      </h5>
+                      <span className="px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-extrabold">
+                        {publishedPosts.length}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {publishedPosts.map((post: any) => (
+                        <div
+                          key={post.id}
+                          className="bg-white rounded-2xl border border-amber-200/80 shadow-2xs overflow-hidden flex flex-col justify-between hover:shadow-sm transition"
+                        >
+                          <div>
+                            {post.full_picture && (
+                              <img
+                                src={post.full_picture}
+                                alt="Post picture"
+                                className="w-full h-44 object-cover"
+                              />
+                            )}
+                            <div className="p-4 space-y-2">
+                              <div className="text-[11.5px] text-slate-400 flex items-center gap-1.5 font-medium">
+                                <span>{post.created_time ? new Date(post.created_time).toLocaleString() : ""}</span>
+                              </div>
+                              <p className="text-[13px] text-slate-800 line-clamp-4 leading-relaxed whitespace-pre-wrap">
+                                {post.message || (lang === "km" ? "(ផុសវីដេអូ ឬរូបភាព)" : "(Media post)")}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="p-3 bg-amber-50/40 border-t border-amber-100 flex items-center justify-between">
+                            <span className="text-[11px] font-mono text-slate-400 truncate max-w-[150px]">
+                              {post.id}
+                            </span>
+                            {post.permalink_url && (
+                              <a
+                                href={post.permalink_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-3 py-1 rounded-lg bg-white border border-amber-200 text-orange-700 hover:text-orange-900 text-[12px] font-bold flex items-center gap-1 shadow-2xs hover:bg-orange-50 transition"
+                              >
+                                <span>{lang === "km" ? "មើលលើ Facebook" : "View"}</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
