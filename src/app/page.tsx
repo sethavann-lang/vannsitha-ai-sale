@@ -45,7 +45,9 @@ import {
   BellRing,
   Edit,
   LogOut,
+  Globe,
 } from "lucide-react";
+import { translations, Language } from "@/lib/i18n";
 
 // --- Data Types ---
 
@@ -228,6 +230,26 @@ export default function Dashboard() {
     | "ads"
     | "settings"
   >("overview");
+
+  const [lang, setLang] = useState<Language>("km");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("vst_lang") as Language;
+      if (saved === "km" || saved === "en") {
+        setLang(saved);
+      }
+    }
+  }, []);
+
+  const handleToggleLang = (newLang: Language) => {
+    setLang(newLang);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("vst_lang", newLang);
+    }
+  };
+
+  const t = translations[lang];
 
   const [loading, setLoading] = useState(true);
   const [savingConfig, setSavingConfig] = useState(false);
@@ -557,7 +579,7 @@ export default function Dashboard() {
   };
 
   const handleLogout = async () => {
-    if (confirm("តើបងពិតជាចង់ចាកចេញពីប្រព័ន្ធមែនទេ?")) {
+    if (confirm(t.logoutConfirm)) {
       try {
         await fetch("/api/auth/logout", { method: "POST" });
       } finally {
@@ -864,19 +886,19 @@ export default function Dashboard() {
         {/* Navigation Items (Sidebar menu: 16–17px, font-weight 600) */}
         <nav className="flex-1 overflow-y-auto p-3.5 space-y-1.5">
           {[
-            { id: "overview", label: "ទិដ្ឋភាពទូទៅ", icon: Layers },
-            { id: "customers", label: "អតិថិជន (CRM)", icon: Users },
-            { id: "pipeline", label: "ដំណើរការលក់", icon: Kanban },
+            { id: "overview", label: t.navOverview, icon: Layers },
+            { id: "customers", label: t.navCustomers, icon: Users },
+            { id: "pipeline", label: t.navPipeline, icon: Kanban },
             {
               id: "followups",
-              label: "ការតាមដាន",
+              label: t.navFollowups,
               icon: BellRing,
               badge: followUpMetrics.overdueCount > 0 ? followUpMetrics.overdueCount : null,
             },
-            { id: "conversations", label: "ការសន្ទនា", icon: MessageSquare },
-            { id: "knowledge", label: "ចំណេះដឹងផលិតផល", icon: BookOpen },
-            { id: "automation", label: "ស្វ័យប្រវត្តិកម្ម", icon: Sliders },
-            { id: "ads", label: "ការផ្សាយពាណិជ្ជកម្ម", icon: Megaphone, tag: "ឆាប់ៗ" },
+            { id: "conversations", label: t.navInbox, icon: MessageSquare },
+            { id: "knowledge", label: t.navKnowledge, icon: BookOpen },
+            { id: "automation", label: t.navAutomation, icon: Sliders },
+            { id: "ads", label: t.navAds, icon: Megaphone, tag: t.comingSoon },
           ].map((item) => {
             const active = activeNav === item.id;
             const Icon = item.icon;
@@ -923,7 +945,7 @@ export default function Dashboard() {
             }`}
           >
             <SettingsIcon className={`w-5 h-5 ${activeNav === "settings" ? "text-white" : "text-amber-700"}`} />
-            <span>ការកំណត់</span>
+            <span>{t.navSettings}</span>
           </button>
 
           {/* User Profile Card */}
@@ -934,7 +956,7 @@ export default function Dashboard() {
             <div className="text-left overflow-hidden">
               <p className="text-[15px] font-bold truncate text-slate-800">Vann Sitha</p>
               <p className="text-[13px] text-amber-800/80 truncate font-semibold">
-                ម្ចាស់អាជីវកម្ម / Admin
+                {t.ownerRole}
               </p>
             </div>
           </div>
@@ -950,15 +972,15 @@ export default function Dashboard() {
           {/* Left: Dynamic Module Title & Status Tag */}
           <div className="flex items-center gap-2.5 shrink-0">
             <h2 className="text-[20px] sm:text-[22px] font-bold text-slate-900 tracking-tight whitespace-nowrap">
-              {activeNav === "overview" && "ទិដ្ឋភាពទូទៅ"}
-              {activeNav === "customers" && "អតិថិជន (CRM)"}
-              {activeNav === "pipeline" && "ដំណើរការលក់ (Sales Pipeline)"}
-              {activeNav === "followups" && "ការតាមដាន & សារព្រាង AI (Follow-ups)"}
-              {activeNav === "conversations" && "ការសន្ទនាផ្ទាល់ (Inbox)"}
-              {activeNav === "knowledge" && "ចំណេះដឹងផលិតផល (Knowledge Base)"}
-              {activeNav === "automation" && "ស្វ័យប្រវត្តិកម្ម & AI Persona"}
-              {activeNav === "ads" && "ការផ្សាយពាណិជ្ជកម្ម (Meta Ads Manager)"}
-              {activeNav === "settings" && "ការកំណត់ប្រព័ន្ធ (Settings)"}
+              {activeNav === "overview" && t.navOverview}
+              {activeNav === "customers" && t.navCustomers}
+              {activeNav === "pipeline" && t.navPipeline}
+              {activeNav === "followups" && t.navFollowups}
+              {activeNav === "conversations" && t.navInbox}
+              {activeNav === "knowledge" && t.navKnowledge}
+              {activeNav === "automation" && t.navAutomation}
+              {activeNav === "ads" && (lang === "km" ? "ការផ្សាយពាណិជ្ជកម្ម (Meta Ads Manager)" : "Meta Ads Manager")}
+              {activeNav === "settings" && t.navSettings}
             </h2>
             <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200/80">
               PRO STUDIO
@@ -994,36 +1016,66 @@ export default function Dashboard() {
               <button
                 onClick={() => setActiveNav("settings")}
                 className="flex items-center gap-1 text-sky-700 hover:text-sky-900 font-semibold cursor-pointer transition"
-                title="Telegram Bot (@My_CEO_Assitant_bot) - ចុចដើម្បីកំណត់"
+                title="Telegram Bot (@My_CEO_Assitant_bot)"
               >
                 <Send className="w-3.5 h-3.5 text-sky-500" />
-                <span>Telegram Alert</span>
+                <span>{t.telegramAlert}</span>
               </button>
             </div>
 
             {/* Subtle Divider */}
             <div className="hidden sm:block h-5 w-[1px] bg-amber-200/80 mx-0.5"></div>
 
+            {/* Language Switcher Pill (Khmer 🇰🇭 / English 🇬🇧) */}
+            <div className="flex items-center rounded-xl bg-amber-50/80 border border-amber-200/90 p-0.5 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => handleToggleLang("km")}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-bold transition cursor-pointer ${
+                  lang === "km"
+                    ? "bg-white text-orange-700 shadow-2xs"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+                title="ប្តូរទៅភាសាខ្មែរ (Khmer)"
+              >
+                <span>🇰🇭</span>
+                <span className="hidden sm:inline">ខ្មែរ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleLang("en")}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-bold transition cursor-pointer ${
+                  lang === "en"
+                    ? "bg-white text-orange-700 shadow-2xs"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+                title="Switch to English"
+              >
+                <span>🇬🇧</span>
+                <span className="hidden sm:inline">EN</span>
+              </button>
+            </div>
+
             {/* Refresh Button (Never wraps text, smooth spinning icon) */}
             <button
               onClick={handleRefreshAll}
               disabled={refreshingAll}
               className="flex items-center gap-2 h-9 px-3.5 py-1.5 rounded-xl border border-amber-200/90 bg-white hover:bg-orange-50/70 text-slate-700 text-[14px] font-semibold transition-all shadow-2xs hover:border-orange-300 disabled:opacity-50 whitespace-nowrap cursor-pointer active:scale-98"
-              title="ផ្ទុកទិន្នន័យឡើងវិញ"
+              title={t.refresh}
             >
               <RefreshCw
                 className={`w-3.5 h-3.5 text-orange-600 transition-transform ${
                   refreshingAll ? "animate-spin" : ""
                 }`}
               />
-              <span className="whitespace-nowrap">ផ្ទុកឡើងវិញ</span>
+              <span className="whitespace-nowrap">{t.refresh}</span>
             </button>
 
             {/* Studio User Avatar & Logout */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               <div
                 className="h-9 px-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center gap-2 shadow-2xs"
-                title="Vann Sitha / Owner"
+                title={t.ownerBadge}
               >
                 <div className="w-6 h-6 rounded-lg bg-linear-to-br from-orange-500 to-amber-500 text-white font-extrabold text-[11px] flex items-center justify-center shadow-xs">
                   VS
@@ -1036,10 +1088,10 @@ export default function Dashboard() {
               <button
                 onClick={handleLogout}
                 className="h-9 px-2.5 sm:px-3 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 text-[13px] font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-98"
-                title="ចាកចេញពីប្រព័ន្ធ (Logout)"
+                title={t.logout}
               >
                 <LogOut className="w-3.5 h-3.5 text-rose-600" />
-                <span className="hidden md:inline">ចាកចេញ</span>
+                <span className="hidden md:inline">{t.logout}</span>
               </button>
             </div>
           </div>
@@ -1066,13 +1118,13 @@ export default function Dashboard() {
                 <div className="bg-white p-6 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between hover:shadow-md hover:border-orange-300 transition-all duration-200">
                   <div className="pr-2">
                     <p className="text-[14px] font-medium text-slate-500 tracking-wide">
-                      អតិថិជនសរុបក្នុង CRM
+                      {t.statsTotalLeads}
                     </p>
                     <p className="text-[28px] font-extrabold text-slate-900 mt-1.5 leading-none">
                       {customers.length}
                     </p>
                     <p className="text-[13px] text-amber-700 mt-2.5 flex items-center gap-1.5 font-medium">
-                      <Users className="w-4 h-4 text-orange-500 shrink-0" /> Auto-sync ពី Comment &amp; Inbox
+                      <Users className="w-4 h-4 text-orange-500 shrink-0" /> {lang === "km" ? "Auto-sync ពី Comment & Inbox" : "Auto-sync from Comments & Inbox"}
                     </p>
                   </div>
                   <div className="w-13 h-13 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center p-3 border border-orange-200/70 shadow-xs shrink-0">
@@ -1084,13 +1136,13 @@ export default function Dashboard() {
                 <div className="bg-white p-6 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between hover:shadow-md hover:border-orange-300 transition-all duration-200">
                   <div className="pr-2">
                     <p className="text-[14px] font-medium text-slate-500 tracking-wide">
-                      ការតាមដានហួសកាលកំណត់
+                      {t.overdueFollowups}
                     </p>
                     <p className="text-[28px] font-extrabold text-[#ea580c] mt-1.5 leading-none">
                       {followUpMetrics.overdueCount}
                     </p>
                     <p className="text-[13px] text-[#ea580c] mt-2.5 flex items-center gap-1.5 font-medium">
-                      <AlertTriangle className="w-4 h-4 shrink-0" /> ត្រូវការការឆ្លើយតបពីអ្នកលក់
+                      <AlertTriangle className="w-4 h-4 shrink-0" /> {t.requiresSalesAction}
                     </p>
                   </div>
                   <div className="w-13 h-13 bg-orange-50 text-[#ea580c] rounded-2xl flex items-center justify-center p-3 border border-orange-200/70 shadow-xs shrink-0">
@@ -1102,13 +1154,13 @@ export default function Dashboard() {
                 <div className="bg-white p-6 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between hover:shadow-md hover:border-orange-300 transition-all duration-200">
                   <div className="pr-2">
                     <p className="text-[14px] font-medium text-slate-500 tracking-wide">
-                      អតិថិជនចង់ទិញ &amp; បានកុម្ម៉ង់
+                      {t.hotLeadsAndWon}
                     </p>
                     <p className="text-[28px] font-extrabold text-emerald-600 mt-1.5 leading-none">
                       {(pipelineCounts.HOT_LEAD || 0) + (pipelineCounts.ORDERED || 0)}
                     </p>
                     <p className="text-[13px] text-emerald-600 mt-2.5 flex items-center gap-1.5 font-medium">
-                      <TrendingUp className="w-4 h-4 shrink-0" /> អត្រាបិទការលក់ខ្ពស់
+                      <TrendingUp className="w-4 h-4 shrink-0" /> {t.highConversionRate}
                     </p>
                   </div>
                   <div className="w-13 h-13 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center p-3 border border-emerald-200/70 shadow-xs shrink-0">
@@ -1120,13 +1172,13 @@ export default function Dashboard() {
                 <div className="bg-white p-6 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between hover:shadow-md hover:border-orange-300 transition-all duration-200">
                   <div className="pr-2">
                     <p className="text-[14px] font-medium text-slate-500 tracking-wide">
-                      ចំណេះដឹងផលិតផល
+                      {t.knowledgeBaseCard}
                     </p>
                     <p className="text-[28px] font-extrabold text-slate-900 mt-1.5 leading-none">
                       {stats.totalKnowledge}
                     </p>
                     <p className="text-[13px] text-[#c2410c] mt-2.5 flex items-center gap-1.5 font-semibold">
-                      <BookOpen className="w-4 h-4 shrink-0" /> ព័ត៌មានដែល AI ប្រើប្រាស់
+                      <BookOpen className="w-4 h-4 shrink-0" /> {t.aiReferenceInfo}
                     </p>
                   </div>
                   <div className="w-13 h-13 bg-amber-50 text-[#c2410c] rounded-2xl flex items-center justify-center p-3 border border-amber-200/70 shadow-xs shrink-0">
@@ -1140,17 +1192,17 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between pb-1 border-b border-amber-100/60">
                   <div>
                     <h3 className="text-[18px] font-bold text-slate-900 leading-snug">
-                      កុងតាក់ស្វ័យប្រវត្តិកម្ម AI
+                      {t.automationSwitchesTitle}
                     </h3>
                     <p className="text-[14px] text-slate-500 font-normal mt-0.5">
-                      កំណត់ការឆ្លើយតបស្វ័យប្រវត្តិតាមរយៈ Facebook Page
+                      {t.automationSwitchesSub}
                     </p>
                   </div>
                   <button
                     onClick={() => setActiveNav("automation")}
                     className="text-[15px] font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1.5 transition"
                   >
-                    កែប្រែ System Prompt <ArrowRight className="w-4 h-4" />
+                    {t.editSystemPrompt} <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -1159,10 +1211,10 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between p-5 rounded-2xl border border-amber-200/70 bg-[#fffdfa] hover:border-orange-300/80 transition-all shadow-2xs">
                     <div className="pr-3">
                       <span className="font-bold text-[16px] text-slate-800">
-                        ឆ្លើយតប Comment
+                        {t.toggleCommentReply}
                       </span>
                       <p className="text-[13.5px] text-slate-500 mt-1 leading-snug">
-                        ឆ្លើយតបជាសាធារណៈលើ Post/Reel
+                        {t.commentReplyDesc}
                       </p>
                     </div>
                     <button
@@ -1189,10 +1241,10 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between p-5 rounded-2xl border border-amber-200/70 bg-[#fffdfa] hover:border-orange-300/80 transition-all shadow-2xs">
                     <div className="pr-3">
                       <span className="font-bold text-[16px] text-slate-800">
-                        ផ្ញើសារ Inbox
+                        {t.togglePrivateReply}
                       </span>
                       <p className="text-[13.5px] text-slate-500 mt-1 leading-snug">
-                        ផ្ញើសារស្វាគមន៍ចូល Messenger ពេលមាន Comment
+                        {t.privateReplyDesc}
                       </p>
                     </div>
                     <button
@@ -1219,10 +1271,10 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between p-5 rounded-2xl border border-amber-200/70 bg-[#fffdfa] hover:border-orange-300/80 transition-all shadow-2xs">
                     <div className="pr-3">
                       <span className="font-bold text-[16px] text-slate-800">
-                        AI ឆ្លើយក្នុង Messenger
+                        {t.toggleInboxReply}
                       </span>
                       <p className="text-[13.5px] text-slate-500 mt-1 leading-snug">
-                        សន្ទនា និងបិទការលក់ដោយស្វ័យប្រវត្តិតាម AI
+                        {t.inboxReplyDesc}
                       </p>
                     </div>
                     <button
@@ -1252,17 +1304,17 @@ export default function Dashboard() {
                 <div className="p-5 border-b border-amber-100 flex items-center justify-between">
                   <div>
                     <h3 className="text-[18px] font-bold text-slate-900 leading-snug">
-                      ការសន្ទនាចុងក្រោយ (Recent Conversations)
+                      {t.recentConversationsTitle}
                     </h3>
                     <p className="text-[14px] text-slate-500 font-normal">
-                      សារចុងក្រោយដែលអតិថិជនបានផ្ញើចូល និងការឆ្លើយតបរបស់ AI
+                      {t.recentConversationsSubtitle}
                     </p>
                   </div>
                   <button
                     onClick={() => setActiveNav("conversations")}
                     className="text-[15px] font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1.5"
                   >
-                    មើលការសន្ទនាទាំងអស់ <ChevronRight className="w-4 h-4" />
+                    {t.viewAllConvs} <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -1270,20 +1322,20 @@ export default function Dashboard() {
                   <table className="w-full text-left">
                     <thead className="bg-amber-50/50 text-slate-800 text-[14.5px] font-semibold border-b border-amber-200/80">
                       <tr>
-                        <th className="px-5 py-3.5">ឈ្មោះអតិថិជន</th>
-                        <th className="px-5 py-3.5">ប្រភព</th>
-                        <th className="px-5 py-3.5">សារចុងក្រោយ</th>
-                        <th className="px-5 py-3.5">ចម្លើយ AI</th>
-                        <th className="px-5 py-3.5">ម៉ោង</th>
-                        <th className="px-5 py-3.5">ស្ថានភាព</th>
-                        <th className="px-5 py-3.5 text-right">សកម្មភាព</th>
+                        <th className="px-5 py-3.5">{t.customerColName}</th>
+                        <th className="px-5 py-3.5">{t.customerColSource}</th>
+                        <th className="px-5 py-3.5">{lang === "km" ? "សារចុងក្រោយ" : "Last Message"}</th>
+                        <th className="px-5 py-3.5">{t.colAiReply}</th>
+                        <th className="px-5 py-3.5">{t.colTime}</th>
+                        <th className="px-5 py-3.5">{t.colStatus}</th>
+                        <th className="px-5 py-3.5 text-right">{t.customerColActions}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-amber-100/60 text-[15.5px] font-medium">
                       {recentConvs.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="px-5 py-10 text-center text-slate-400">
-                            មិនទាន់មានការសន្ទនានៅឡើយទេ។
+                            {lang === "km" ? "មិនទាន់មានការសន្ទនានៅឡើយទេ។" : "No recent conversations yet."}
                           </td>
                         </tr>
                       ) : (
@@ -1312,11 +1364,11 @@ export default function Dashboard() {
                             <td className="px-5 py-4">
                               {conv.isAiPaused ? (
                                 <span className="inline-flex items-center gap-1.5 text-[13.5px] px-3 py-1 rounded-full font-semibold bg-amber-100 text-amber-800 border border-amber-200">
-                                  <PauseCircle className="w-4 h-4" /> មនុស្សឆ្លើយផ្ទាល់
+                                  <PauseCircle className="w-4 h-4" /> {t.humanHandled}
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1.5 text-[13.5px] px-3 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> AI ឆ្លើយ
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> {t.aiActive}
                                 </span>
                               )}
                             </td>
@@ -1328,7 +1380,7 @@ export default function Dashboard() {
                                 }}
                                 className="text-[14.5px] font-semibold text-orange-600 hover:text-orange-800 px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100/80 transition border border-orange-200/60"
                               >
-                                បើក Chat
+                                {t.openChat}
                               </button>
                             </td>
                           </tr>
@@ -1349,10 +1401,10 @@ export default function Dashboard() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-[20px] font-bold text-slate-900 leading-snug">
-                    បញ្ជីអតិថិជន &amp; Leads (CRM)
+                    {t.crmTitle}
                   </h2>
                   <p className="text-[14px] text-slate-500 font-normal">
-                    គ្រប់គ្រងទិន្នន័យអតិថិជន លេខទូរស័ព្ទ និងប្រវត្តិតាមដានការលក់
+                    {t.customerListSub}
                   </p>
                 </div>
 
@@ -1361,13 +1413,13 @@ export default function Dashboard() {
                     onClick={() => setShowAddCustomerModal(true)}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[15px] font-bold shadow-xs transition"
                   >
-                    <Plus className="w-4.5 h-4.5" /> បន្ថែមអតិថិជនថ្មី
+                    <Plus className="w-4.5 h-4.5" /> {t.addCustomerBtn}
                   </button>
                   <button
                     onClick={fetchCustomers}
                     className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-amber-200 bg-white text-slate-700 hover:bg-orange-50/60 text-[15px] font-semibold transition shadow-xs"
                   >
-                    <RefreshCw className="w-4 h-4 text-orange-600" /> ផ្ទុកឡើងវិញ
+                    <RefreshCw className="w-4 h-4 text-orange-600" /> {t.refresh}
                   </button>
                 </div>
               </div>
@@ -1378,7 +1430,7 @@ export default function Dashboard() {
                   <Search className="w-4.5 h-4.5 absolute left-3.5 top-3 text-amber-500/70" />
                   <input
                     type="text"
-                    placeholder="ស្វែងរកតាមឈ្មោះ, លេខទូរស័ព្ទ, ឬផលិតផល..."
+                    placeholder={t.crmSearchPlaceholder}
                     value={crmSearch}
                     onChange={(e) => setCrmSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 text-[15px] font-medium border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
@@ -1387,20 +1439,20 @@ export default function Dashboard() {
 
                 <div className="flex items-center gap-2.5 w-full sm:w-auto">
                   <span className="text-[14.5px] font-medium text-slate-600 whitespace-nowrap">
-                    ដំណាក់កាលលក់:
+                    {lang === "km" ? "ដំណាក់កាលលក់:" : "Pipeline Stage:"}
                   </span>
                   <select
                     value={crmStageFilter}
                     onChange={(e) => setCrmStageFilter(e.target.value)}
                     className="text-[14.5px] font-medium border border-amber-200 rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
                   >
-                    <option value="ALL">ដំណាក់កាលទាំងអស់</option>
-                    <option value="NEW_LEAD">អតិថិជនថ្មី (New Lead)</option>
-                    <option value="INTERESTED">ចាប់អារម្មណ៍ (Interested)</option>
-                    <option value="HOT_LEAD">ចង់ទិញខ្លាំង (Hot Lead)</option>
-                    <option value="FOLLOW_UP">កំពុងតាមដាន (Follow-up)</option>
-                    <option value="ORDERED">បានកុម្ម៉ង់ (Ordered)</option>
-                    <option value="LOST">បោះបង់ (Lost)</option>
+                    <option value="ALL">{t.allStages}</option>
+                    <option value="NEW_LEAD">{lang === "km" ? "អតិថិជនថ្មី (New Lead)" : "New Lead"}</option>
+                    <option value="INTERESTED">{lang === "km" ? "ចាប់អារម្មណ៍ (Interested)" : "Interested"}</option>
+                    <option value="HOT_LEAD">{lang === "km" ? "ចង់ទិញខ្លាំង (Hot Lead)" : "Hot Lead"}</option>
+                    <option value="FOLLOW_UP">{lang === "km" ? "កំពុងតាមដាន (Follow-up)" : "Follow-up"}</option>
+                    <option value="ORDERED">{lang === "km" ? "បានកុម្ម៉ង់ (Ordered)" : "Ordered / Won"}</option>
+                    <option value="LOST">{lang === "km" ? "បោះបង់ (Lost)" : "Lost / Declined"}</option>
                   </select>
                 </div>
               </div>
@@ -1411,27 +1463,27 @@ export default function Dashboard() {
                   <table className="w-full text-left">
                     <thead className="bg-amber-50/50 text-slate-800 text-[14.5px] font-semibold border-b border-amber-200/80">
                       <tr>
-                        <th className="px-5 py-3.5">ឈ្មោះអតិថិជន</th>
-                        <th className="px-5 py-3.5">លេខទូរស័ព្ទ</th>
-                        <th className="px-5 py-3.5">ផលិតផលចាប់អារម្មណ៍</th>
-                        <th className="px-5 py-3.5">ដំណាក់កាល</th>
-                        <th className="px-5 py-3.5">អ្នកទទួលបន្ទុក</th>
-                        <th className="px-5 py-3.5">ទាក់ទងចុងក្រោយ</th>
-                        <th className="px-5 py-3.5">ថ្ងៃតាមដានបន្ទាប់</th>
-                        <th className="px-5 py-3.5 text-right">សកម្មភាព</th>
+                        <th className="px-5 py-3.5">{t.customerColName}</th>
+                        <th className="px-5 py-3.5">{t.customerColPhone}</th>
+                        <th className="px-5 py-3.5">{t.customerColProduct}</th>
+                        <th className="px-5 py-3.5">{t.customerColStage}</th>
+                        <th className="px-5 py-3.5">{t.customerColAssigned}</th>
+                        <th className="px-5 py-3.5">{t.customerColLastContact}</th>
+                        <th className="px-5 py-3.5">{t.customerColNextFollowUp}</th>
+                        <th className="px-5 py-3.5 text-right">{t.customerColActions}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-amber-100/60 text-[15.5px] font-medium">
                       {crmLoading ? (
                         <tr>
                           <td colSpan={8} className="px-5 py-10 text-center text-slate-400">
-                            កំពុងទាញយកទិន្នន័យអតិថិជន...
+                            {t.loadingCustomers}
                           </td>
                         </tr>
                       ) : customers.length === 0 ? (
                         <tr>
                           <td colSpan={8} className="px-5 py-10 text-center text-slate-400">
-                            មិនមានទិន្នន័យអតិថិជនដែលត្រូវនឹងលក្ខខណ្ឌស្វែងរកឡើយ។
+                            {lang === "km" ? "មិនមានទិន្នន័យអតិថិជនដែលត្រូវនឹងលក្ខខណ្ឌស្វែងរកឡើយ។" : "No customers match your search query."}
                           </td>
                         </tr>
                       ) : (
@@ -1461,7 +1513,7 @@ export default function Dashboard() {
                                     <Phone className="w-3.5 h-3.5" /> {c.phone}
                                   </span>
                                 ) : (
-                                  <span className="text-slate-400 italic">គ្មានលេខ</span>
+                                  <span className="text-slate-400 italic">{t.noPhone}</span>
                                 )}
                               </td>
                               <td className="px-5 py-4 text-slate-700">
@@ -1471,7 +1523,7 @@ export default function Dashboard() {
                                 <span
                                   className={`text-[13.5px] px-3 py-1 rounded-full font-semibold border ${stageConf.bg} ${stageConf.color} ${stageConf.border}`}
                                 >
-                                  {stageConf.khmer}
+                                  {lang === "km" ? stageConf.khmer : stageConf.label}
                                 </span>
                               </td>
                               <td className="px-5 py-4 text-slate-600">
@@ -1491,12 +1543,12 @@ export default function Dashboard() {
                                     <span>{new Date(c.nextFollowUpAt).toLocaleString()}</span>
                                     {isOverdue && (
                                       <span className="text-[11px] px-2 py-0.5 rounded bg-orange-100 text-[#ea580c] font-bold">
-                                        ហួសពេល
+                                        {lang === "km" ? "ហួសពេល" : "Overdue"}
                                       </span>
                                     )}
                                   </div>
                                 ) : (
-                                  <span className="text-slate-400 italic">មិនទាន់កំណត់</span>
+                                  <span className="text-slate-400 italic">{lang === "km" ? "មិនទាន់កំណត់" : "Not scheduled"}</span>
                                 )}
                               </td>
                               <td className="px-5 py-4 text-right">
@@ -1509,7 +1561,7 @@ export default function Dashboard() {
                                     title="កំណត់ពេល Follow-up"
                                     className="text-[14px] px-3 py-1.5 rounded-xl bg-orange-50 text-[#ea580c] hover:bg-orange-100 font-semibold transition flex items-center gap-1.5 border border-orange-200/60"
                                   >
-                                    <Calendar className="w-3.5 h-3.5" /> តាមដាន
+                                    <Calendar className="w-3.5 h-3.5" /> {lang === "km" ? "តាមដាន" : "Follow-up"}
                                   </button>
                                   <button
                                     onClick={() => setEditingCustomer(c)}
@@ -1551,11 +1603,10 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-[20px] font-bold text-slate-900 leading-snug">
-                    ដំណើរការលក់ (Sales Pipeline Kanban)
+                    {t.pipelineTitle}
                   </h2>
                   <p className="text-[14px] text-slate-500 font-normal">
-                    តាមដានដំណាក់កាលលក់ទាំង ៦ (អតិថិជនថ្មី ➔ ចាប់អារម្មណ៍ ➔ ចង់ទិញខ្លាំង ➔
-                    កំពុងតាមដាន ➔ បានកុម្ម៉ង់ ➔ បោះបង់)
+                    {t.pipelineSub}
                   </p>
                 </div>
 
@@ -1564,7 +1615,7 @@ export default function Dashboard() {
                     onClick={fetchPipeline}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-amber-200 bg-white text-slate-700 hover:bg-orange-50/60 text-[15px] font-semibold transition shadow-xs"
                   >
-                    <RefreshCw className="w-4 h-4 text-orange-600" /> ផ្ទុកឡើងវិញ
+                    <RefreshCw className="w-4 h-4 text-orange-600" /> {t.refresh}
                   </button>
                 </div>
               </div>
@@ -1593,7 +1644,9 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-amber-200/70">
                         <div className="flex items-center gap-2">
                           <span className={`w-3 h-3 rounded-full ${conf.dot}`} />
-                          <h4 className="font-bold text-[15.5px] text-slate-800">{conf.khmer}</h4>
+                          <h4 className="font-bold text-[15.5px] text-slate-800">
+                            {lang === "km" ? conf.khmer : conf.label}
+                          </h4>
                         </div>
                         <span className="px-2.5 py-0.5 rounded-full text-[13px] font-bold bg-white text-slate-700 shadow-xs border border-amber-200/80">
                           {leads.length}
@@ -1604,7 +1657,7 @@ export default function Dashboard() {
                       <div className="space-y-3 overflow-y-auto pr-1 flex-1">
                         {leads.length === 0 ? (
                           <div className="text-center py-12 text-[14px] text-slate-400 italic bg-amber-50/20 rounded-xl border border-dashed border-amber-200/60 my-1">
-                            គ្មានអតិថិជន
+                            {lang === "km" ? "គ្មានអតិថិជន" : "No leads"}
                           </div>
                         ) : (
                           leads.map((lead) => {
@@ -1645,7 +1698,7 @@ export default function Dashboard() {
                                   >
                                     <Clock className="w-3.5 h-3.5" />
                                     <span>
-                                      {isOverdue ? "Overdue: " : "តាមដាន: "}
+                                      {isOverdue ? (lang === "km" ? "ហួសពេល: " : "Overdue: ") : (lang === "km" ? "តាមដាន: " : "Follow-up: ")}
                                       {new Date(lead.nextFollowUpAt).toLocaleDateString()}
                                     </span>
                                   </div>
@@ -1658,12 +1711,12 @@ export default function Dashboard() {
                                     onChange={(e) => handleMoveStage(lead.id, e.target.value)}
                                     className="text-[13px] font-semibold py-1 px-2 rounded-lg border border-amber-200 bg-amber-50/40 text-slate-700 focus:outline-none focus:ring-1 focus:ring-orange-400"
                                   >
-                                    <option value="NEW_LEAD">អតិថិជនថ្មី</option>
-                                    <option value="INTERESTED">ចាប់អារម្មណ៍</option>
-                                    <option value="HOT_LEAD">ចង់ទិញខ្លាំង</option>
-                                    <option value="FOLLOW_UP">កំពុងតាមដាន</option>
-                                    <option value="ORDERED">បានកុម្ម៉ង់ (Won)</option>
-                                    <option value="LOST">បោះបង់ (Lost)</option>
+                                    <option value="NEW_LEAD">{lang === "km" ? "អតិថិជនថ្មី" : "New Lead"}</option>
+                                    <option value="INTERESTED">{lang === "km" ? "ចាប់អារម្មណ៍" : "Interested"}</option>
+                                    <option value="HOT_LEAD">{lang === "km" ? "ចង់ទិញខ្លាំង" : "Hot Lead"}</option>
+                                    <option value="FOLLOW_UP">{lang === "km" ? "កំពុងតាមដាន" : "Follow-up"}</option>
+                                    <option value="ORDERED">{lang === "km" ? "បានកុម្ម៉ង់ (Won)" : "Ordered / Won"}</option>
+                                    <option value="LOST">{lang === "km" ? "បោះបង់ (Lost)" : "Lost / Declined"}</option>
                                   </select>
 
                                   <button
@@ -1697,11 +1750,10 @@ export default function Dashboard() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-[20px] font-bold text-slate-900 leading-snug">
-                    ការតាមដាន &amp; ស្ទូឌីយោសារ AI (Follow-up Engine)
+                    {t.followupsTitle}
                   </h2>
                   <p className="text-[14px] text-slate-500 font-normal">
-                    តាមដានកាលវិភាគ Follow-up, Overdue Reminders និងពិនិត្យអនុម័តសារដែល AI Gemini
-                    Draft
+                    {t.followupsSub}
                   </p>
                 </div>
 
@@ -1709,7 +1761,7 @@ export default function Dashboard() {
                   onClick={fetchFollowUps}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-amber-200 bg-white text-slate-700 hover:bg-orange-50/60 text-[15px] font-semibold transition shadow-xs"
                 >
-                  <RefreshCw className="w-4 h-4 text-orange-600" /> ផ្ទុកឡើងវិញ
+                  <RefreshCw className="w-4 h-4 text-orange-600" /> {t.refresh}
                 </button>
               </div>
 
@@ -1724,13 +1776,13 @@ export default function Dashboard() {
                   }`}
                 >
                   <span className="text-[13.5px] font-semibold text-[#ea580c] uppercase">
-                    ហួសកាលកំណត់ (Overdue)
+                    {lang === "km" ? "ហួសកាលកំណត់ (Overdue)" : "Overdue"}
                   </span>
                   <p className="text-[27px] font-bold text-[#ea580c] mt-1 leading-none">
                     {followUpMetrics.overdueCount}
                   </p>
                   <p className="text-[13px] text-orange-700 mt-1 font-medium">
-                    ត្រូវការទាក់ទងជាបន្ទាន់
+                    {lang === "km" ? "ត្រូវការទាក់ទងជាបន្ទាន់" : "Requires urgent contact"}
                   </p>
                 </button>
 
@@ -1743,13 +1795,13 @@ export default function Dashboard() {
                   }`}
                 >
                   <span className="text-[13.5px] font-semibold text-amber-800 uppercase">
-                    ថ្ងៃនេះ (Due Today)
+                    {lang === "km" ? "ថ្ងៃនេះ (Due Today)" : "Due Today"}
                   </span>
                   <p className="text-[27px] font-bold text-amber-800 mt-1 leading-none">
                     {followUpMetrics.todayCount}
                   </p>
                   <p className="text-[13px] text-amber-700 mt-1 font-medium">
-                    ត្រូវតាមដានក្នុងថ្ងៃនេះ
+                    {lang === "km" ? "ត្រូវតាមដានក្នុងថ្ងៃនេះ" : "Due for follow-up today"}
                   </p>
                 </button>
 
@@ -1762,12 +1814,14 @@ export default function Dashboard() {
                   }`}
                 >
                   <span className="text-[13.5px] font-semibold text-sky-800 uppercase">
-                    កំពុងរង់ចាំ (Pending)
+                    {lang === "km" ? "កំពុងរង់ចាំ (Pending)" : "Pending"}
                   </span>
                   <p className="text-[27px] font-bold text-sky-900 mt-1 leading-none">
                     {followUpMetrics.pendingCount}
                   </p>
-                  <p className="text-[13px] text-sky-700 mt-1 font-medium">តាមកាលកំណត់ខាងមុខ</p>
+                  <p className="text-[13px] text-sky-700 mt-1 font-medium">
+                    {lang === "km" ? "តាមកាលកំណត់ខាងមុខ" : "Upcoming scheduled"}
+                  </p>
                 </button>
 
                 <button
@@ -1779,13 +1833,13 @@ export default function Dashboard() {
                   }`}
                 >
                   <span className="text-[13.5px] font-semibold text-emerald-800 uppercase">
-                    រួចរាល់ (Completed)
+                    {lang === "km" ? "រួចរាល់ (Completed)" : "Completed"}
                   </span>
                   <p className="text-[27px] font-bold text-emerald-800 mt-1 leading-none">
                     {followUpMetrics.completedCount}
                   </p>
                   <p className="text-[13px] text-emerald-700 mt-1 font-medium">
-                    បាន Follow-up រួចរាល់
+                    {lang === "km" ? "បាន Follow-up រួចរាល់" : "Follow-ups completed"}
                   </p>
                 </button>
               </div>
@@ -1796,15 +1850,15 @@ export default function Dashboard() {
                 <div className="lg:col-span-7 space-y-3.5">
                   <div className="flex items-center justify-between">
                     <h3 className="text-[17px] font-bold text-slate-800">
-                      កាលវិភាគ Follow-up ({followUpTasks.length})
+                      {lang === "km" ? `កាលវិភាគ Follow-up (${followUpTasks.length})` : `Follow-up Schedule (${followUpTasks.length})`}
                     </h3>
                     <div className="flex items-center gap-1.5">
                       {[
-                        { key: "ALL", label: "ទាំងអស់" },
-                        { key: "PENDING", label: "រង់ចាំ" },
-                        { key: "OVERDUE", label: "ហួសពេល" },
-                        { key: "TODAY", label: "ថ្ងៃនេះ" },
-                        { key: "COMPLETED", label: "រួចរាល់" },
+                        { key: "ALL", label: t.allFilter },
+                        { key: "PENDING", label: lang === "km" ? "រង់ចាំ" : "Pending" },
+                        { key: "OVERDUE", label: t.overdueFilter },
+                        { key: "TODAY", label: t.todayFilter },
+                        { key: "COMPLETED", label: t.completedFilter },
                       ].map((f) => (
                         <button
                           key={f.key}
@@ -1823,11 +1877,11 @@ export default function Dashboard() {
 
                   {followUpLoading ? (
                     <div className="bg-white p-10 rounded-2xl border border-amber-200/80 text-center text-slate-400 text-[15px]">
-                      កំពុងទាញយកទិន្នន័យ Tasks...
+                      {lang === "km" ? "កំពុងទាញយកទិន្នន័យ Tasks..." : "Loading follow-up tasks..."}
                     </div>
                   ) : followUpTasks.length === 0 ? (
                     <div className="bg-white p-10 rounded-2xl border border-amber-200/80 text-center text-slate-400 text-[15px]">
-                      គ្មាន Follow-up task ក្នុងក្រុមនេះឡើយ។
+                      {lang === "km" ? "គ្មាន Follow-up task ក្នុងក្រុមនេះឡើយ។" : "No follow-up tasks in this category."}
                     </div>
                   ) : (
                     followUpTasks.map((task) => {
@@ -1859,7 +1913,7 @@ export default function Dashboard() {
                                 </span>
                               </div>
                               <p className="text-[14px] text-slate-500 mt-1 font-medium">
-                                📞 {task.customer.phone || "គ្មានលេខ"} | 📦{" "}
+                                📞 {task.customer.phone || t.noPhone} | 📦{" "}
                                 {task.customer.productInterest || "Kidney Pro"}
                               </p>
                             </div>
@@ -1874,17 +1928,17 @@ export default function Dashboard() {
                               }`}
                             >
                               {task.status === "COMPLETED"
-                                ? "រួចរាល់"
+                                ? (lang === "km" ? "រួចរាល់" : "Completed")
                                 : isOverdue
-                                ? "ហួសពេល"
-                                : "រង់ចាំ"}
+                                ? (lang === "km" ? "ហួសពេល" : "Overdue")
+                                : (lang === "km" ? "រង់ចាំ" : "Pending")}
                             </span>
                           </div>
 
                           {/* Reason & Scheduled Time */}
                           <div className="mt-3.5 flex flex-wrap items-center gap-2.5 text-[14px]">
                             <span className="px-3 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-semibold">
-                              🎯 {reasonInfo.khmer}
+                              🎯 {lang === "km" ? reasonInfo.khmer : reasonInfo.label}
                             </span>
                             <span className="text-slate-500 flex items-center gap-1.5 font-medium">
                               <Clock className="w-4 h-4 text-slate-400" />
@@ -1895,7 +1949,7 @@ export default function Dashboard() {
                           {/* AI Suggested Message Preview */}
                           {task.aiSuggestedText && (
                             <div className="mt-3 p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/60 text-[14.5px] text-slate-700 italic line-clamp-2 leading-relaxed">
-                              ✨ សារព្រាង AI: &ldquo;{task.aiSuggestedText}&rdquo;
+                              ✨ {lang === "km" ? "សារព្រាង AI:" : "AI Draft:"} &ldquo;{task.aiSuggestedText}&rdquo;
                             </div>
                           )}
 
@@ -1909,7 +1963,7 @@ export default function Dashboard() {
                               className="text-[15px] font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition flex items-center gap-2 shadow-xs"
                             >
                               <Sparkles className="w-4 h-4" />
-                              ពិនិត្យ &amp; អនុម័តសារ AI
+                              {lang === "km" ? "ពិនិត្យ & អនុម័តសារ AI" : "Review & Approve AI Draft"}
                             </button>
 
                             {task.status === "PENDING" && (
@@ -1928,7 +1982,7 @@ export default function Dashboard() {
                                 }}
                                 className="text-[14px] text-slate-600 hover:text-emerald-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition"
                               >
-                                ✓ សម្គាល់ថាបានរួចរាល់
+                                {lang === "km" ? "✓ សម្គាល់ថាបានរួចរាល់" : "✓ Mark Completed"}
                               </button>
                             )}
                           </div>
@@ -1947,10 +2001,10 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <h3 className="font-bold text-slate-900 text-[17px] leading-snug">
-                          ស្ទូឌីយោសារ AI (Human-in-the-Loop)
+                          {lang === "km" ? "ស្ទូឌីយោសារ AI (Human-in-the-Loop)" : "AI Studio (Human-in-the-Loop)"}
                         </h3>
                         <p className="text-[13.5px] text-slate-500 font-normal">
-                          ពិនិត្យ កែសម្រួល និងអនុម័តសារមុននឹងផ្ញើ
+                          {lang === "km" ? "ពិនិត្យ កែសម្រួល និងអនុម័តសារមុននឹងផ្ញើ" : "Review, edit, and approve before sending"}
                         </p>
                       </div>
                     </div>
@@ -1960,22 +2014,23 @@ export default function Dashboard() {
                     <div className="space-y-4">
                       <div className="p-3.5 bg-amber-50/50 rounded-xl border border-amber-200/70 text-[14px] space-y-1.5 font-medium">
                         <div className="flex justify-between">
-                          <span className="text-slate-500">អតិថិជន:</span>
+                          <span className="text-slate-500">{lang === "km" ? "អតិថិជន:" : "Customer:"}</span>
                           <strong className="text-slate-900">
                             {activeReviewTask.customer.name}
                           </strong>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">មូលហេតុ:</span>
+                          <span className="text-slate-500">{lang === "km" ? "មូលហេតុ:" : "Reason:"}</span>
                           <strong className="text-amber-800">
-                            {REASON_LABELS[activeReviewTask.reason]?.khmer ||
-                              activeReviewTask.reason}
+                            {lang === "km"
+                              ? (REASON_LABELS[activeReviewTask.reason]?.khmer || activeReviewTask.reason)
+                              : (REASON_LABELS[activeReviewTask.reason]?.label || activeReviewTask.reason)}
                           </strong>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-500">Messenger PSID:</span>
                           <strong className="font-mono text-slate-700">
-                            {activeReviewTask.customer.psid || "គ្មាន"}
+                            {activeReviewTask.customer.psid || (lang === "km" ? "គ្មាន" : "None")}
                           </strong>
                         </div>
                       </div>
@@ -1983,7 +2038,7 @@ export default function Dashboard() {
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
                           <label className="text-[14.5px] font-semibold text-slate-700">
-                            សារ Follow-up (ព្រាងជាភាសាខ្មែរ):
+                            {lang === "km" ? "សារ Follow-up (ព្រាងដោយ AI):" : "Follow-up Message (AI Draft):"}
                           </label>
                           <button
                             onClick={() =>
@@ -1998,7 +2053,7 @@ export default function Dashboard() {
                             <RefreshCw
                               className={`w-3.5 h-3.5 ${generatingAiDraft ? "animate-spin" : ""}`}
                             />
-                            ព្រាងសារថ្មី
+                            {lang === "km" ? "ព្រាងសារថ្មី" : "Re-draft"}
                           </button>
                         </div>
 
@@ -2006,7 +2061,7 @@ export default function Dashboard() {
                           rows={7}
                           value={draftMessageText}
                           onChange={(e) => setDraftMessageText(e.target.value)}
-                          placeholder="សារដែល AI បានព្រាងទុកនឹងបង្ហាញនៅទីនេះ..."
+                          placeholder={lang === "km" ? "សារដែល AI បានព្រាងទុកនឹងបង្ហាញនៅទីនេះ..." : "AI-suggested draft message will appear here..."}
                           className="w-full text-[15px] p-3.5 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 leading-relaxed font-medium bg-white"
                         />
                       </div>
@@ -2015,9 +2070,10 @@ export default function Dashboard() {
                       <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[13.5px] text-amber-800 flex items-start gap-2.5 leading-relaxed">
                         <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                         <span>
-                          <strong>សុវត្ថិភាព Meta Policy:</strong>{" "}
-                          សារនេះនឹងផ្ញើតាមរយៈផេកផ្លូវការ ដោយមានការអនុម័តដោយដៃពីអ្នក
-                          ដើម្បីគោរពគោលការណ៍ Messaging។
+                          <strong>{lang === "km" ? "សុវត្ថិភាព Meta Policy:" : "Meta Policy Compliant:"}</strong>{" "}
+                          {lang === "km"
+                            ? "សារនេះនឹងផ្ញើតាមរយៈផេកផ្លូវការ ដោយមានការអនុម័តដោយដៃពីអ្នក ដើម្បីគោរពគោលការណ៍ Messaging។"
+                            : "This message will be sent through the official Page with your manual approval to comply with Meta Messaging policies."}
                         </span>
                       </div>
 
@@ -2035,16 +2091,16 @@ export default function Dashboard() {
                           className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-5 rounded-xl text-[15.5px] shadow-xs transition flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                           <Send className="w-4 h-4" />
-                          {sendingFollowUp ? "កំពុងផ្ញើ..." : "អនុម័ត & ផ្ញើចូល Messenger"}
+                          {sendingFollowUp ? (lang === "km" ? "កំពុងផ្ញើ..." : "Sending...") : (lang === "km" ? "អនុម័ត & ផ្ញើចូល Messenger" : "Approve & Send to Messenger")}
                         </button>
 
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText(draftMessageText);
-                            alert("បានចម្លងសារទៅកាន់ Clipboard រួចរាល់!");
+                            alert(lang === "km" ? "បានចម្លងសារទៅកាន់ Clipboard រួចរាល់!" : "Copied message to clipboard!");
                           }}
                           className="px-4 py-3 border border-amber-200 text-slate-700 hover:bg-orange-50/60 rounded-xl text-[15px] font-semibold transition shadow-xs"
-                          title="ចម្លងសារ"
+                          title={t.copy}
                         >
                           <Copy className="w-4.5 h-4.5" />
                         </button>
@@ -2053,7 +2109,7 @@ export default function Dashboard() {
                   ) : (
                     <div className="py-14 text-center text-slate-400 text-[14.5px]">
                       <Sparkles className="w-9 h-9 mx-auto mb-2 text-amber-300" />
-                      សូមជ្រើសរើស Task មួយនៅខាងឆ្វេង ដើម្បីពិនិត្យ និងកែសម្រួលសារ AI Draft
+                      {lang === "km" ? "សូមជ្រើសរើស Task មួយនៅខាងឆ្វេង ដើម្បីពិនិត្យ និងកែសម្រួលសារ AI Draft" : "Select a task on the left to review and edit the AI draft message"}
                     </div>
                   )}
                 </div>
@@ -2069,7 +2125,7 @@ export default function Dashboard() {
               {/* Conversation List Sidebar */}
               <div className="w-full md:w-84 border-r border-amber-200/80 flex flex-col bg-[#fffdfa]">
                 <div className="p-4.5 border-b border-amber-200/80 flex items-center justify-between bg-white">
-                  <span className="font-bold text-[16px] text-slate-900">ប្រអប់សារ Inbox</span>
+                  <span className="font-bold text-[16px] text-slate-900">{t.inboxTitle}</span>
                   <button
                     onClick={fetchConversations}
                     disabled={refreshingChats}
@@ -2082,7 +2138,7 @@ export default function Dashboard() {
                 <div className="overflow-y-auto flex-1 divide-y divide-amber-100/60">
                   {conversations.length === 0 ? (
                     <div className="p-8 text-center text-[14px] text-slate-400">
-                      មិនទាន់មានប្រវត្តិ Chat ណាមួយឡើយ។
+                      {lang === "km" ? "មិនទាន់មានប្រវត្តិ Chat ណាមួយឡើយ។" : "No conversation history yet."}
                     </div>
                   ) : (
                     conversations.map((c) => {
@@ -2112,17 +2168,17 @@ export default function Dashboard() {
                           </div>
 
                           <p className="text-[14px] text-slate-600 line-clamp-1 font-normal">
-                            {lastMsg ? `${lastMsg.sender}: ${lastMsg.text}` : "គ្មានសារនៅឡើយទេ"}
+                            {lastMsg ? `${lastMsg.sender}: ${lastMsg.text}` : (lang === "km" ? "គ្មានសារនៅឡើយទេ" : "No messages yet")}
                           </p>
 
                           <div className="flex items-center gap-2 mt-1">
                             {c.isAiPaused ? (
                               <span className="inline-flex items-center gap-1 text-[12px] px-2 py-0.5 rounded-md font-semibold bg-amber-100 text-amber-800 border border-amber-200">
-                                <PauseCircle className="w-3 h-3" /> មនុស្សឆ្លើយ
+                                <PauseCircle className="w-3 h-3" /> {lang === "km" ? "មនុស្សឆ្លើយ" : "Human"}
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[12px] px-2 py-0.5 rounded-md font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                <PlayCircle className="w-3 h-3" /> AI កំពុងឆ្លើយ
+                                <PlayCircle className="w-3 h-3" /> {lang === "km" ? "AI កំពុងឆ្លើយ" : "AI Active"}
                               </span>
                             )}
                           </div>
@@ -2149,7 +2205,7 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <p className="text-[13.5px] text-slate-500 mt-0.5 font-normal">
-                        ចាប់ផ្តើមសន្ទនា:{" "}
+                        {lang === "km" ? "ចាប់ផ្តើមសន្ទនា: " : "Started: "}
                         {new Date(selectedConversation.createdAt || selectedConversation.updatedAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -2168,11 +2224,11 @@ export default function Dashboard() {
                       >
                         {selectedConversation.isAiPaused ? (
                           <>
-                            <PlayCircle className="w-4.5 h-4.5" /> បន្ត AI ឡើងវិញ
+                            <PlayCircle className="w-4.5 h-4.5" /> {lang === "km" ? "បន្ត AI ឡើងវិញ" : "Resume AI"}
                           </>
                         ) : (
                           <>
-                            <PauseCircle className="w-4.5 h-4.5" /> ផ្អាក AI (មនុស្សឆ្លើយផ្ទាល់)
+                            <PauseCircle className="w-4.5 h-4.5" /> {lang === "km" ? "ផ្អាក AI (មនុស្សឆ្លើយផ្ទាល់)" : "Pause AI (Human Takeover)"}
                           </>
                         )}
                       </button>
@@ -2190,7 +2246,7 @@ export default function Dashboard() {
                         >
                           <div className="flex items-center gap-2 mb-1 px-1">
                             <span className="text-[12.5px] font-semibold text-slate-500">
-                              {isUser ? "អតិថិជន" : "ជំនួយការលក់ AI"}
+                              {isUser ? (lang === "km" ? "អតិថិជន" : "Customer") : (lang === "km" ? "ជំនួយការលក់ AI" : "AI Sales Assistant")}
                             </span>
                             <span className="text-[12px] text-slate-400">
                               {new Date(m.createdAt).toLocaleTimeString([], {
@@ -2217,14 +2273,18 @@ export default function Dashboard() {
                   <div className="p-4 border-t border-amber-200/80 bg-amber-50/50 text-[14px] text-slate-700 flex items-center justify-between font-normal">
                     <span>
                       {selectedConversation.isAiPaused
-                        ? "⚠️ AI ត្រូវបាន Pause: លោកអ្នកអាចចូលឆ្លើយតបក្នុង Meta Business Inbox ដោយសុវត្ថិភាព។"
-                        : "✅ AI កំពុងដំណើរការឆ្លើយតបដោយស្វ័យប្រវត្តិតាម System Prompt & Knowledge Base។"}
+                        ? (lang === "km"
+                            ? "⚠️ AI ត្រូវបាន Pause: លោកអ្នកអាចចូលឆ្លើយតបក្នុង Meta Business Inbox ដោយសុវត្ថិភាព។"
+                            : "⚠️ AI is paused: You can reply directly in Meta Business Suite / Page Inbox.")
+                        : (lang === "km"
+                            ? "✅ AI កំពុងដំណើរការឆ្លើយតបដោយស្វ័យប្រវត្តិតាម System Prompt & Knowledge Base។"
+                            : "✅ AI is actively responding based on System Prompt & Knowledge Base.")}
                     </span>
                   </div>
                 </div>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-slate-400 text-[15px]">
-                  សូមជ្រើសរើសការសន្ទនាដើម្បីមើលសារ
+                  {lang === "km" ? "សូមជ្រើសរើសការសន្ទនាដើម្បីមើលសារ" : "Select a conversation to view messages"}
                 </div>
               )}
             </div>
@@ -2237,33 +2297,34 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 bg-white p-6 rounded-2xl border border-amber-200/80 shadow-xs space-y-4.5">
                 <h3 className="font-bold text-slate-900 text-[18px] leading-snug">
-                  បន្ថែមព័ត៌មានទំនិញ / សំណួរញឹកញាប់
+                  {lang === "km" ? "បន្ថែមព័ត៌មានទំនិញ / សំណួរញឹកញាប់" : "Add Product Knowledge / FAQ"}
                 </h3>
                 <p className="text-[14px] text-slate-500 font-normal">
-                  បន្ថែមព័ត៌មានផលិតផល តម្លៃ ប្រូម៉ូសិន ឬលក្ខខណ្ឌដឹកជញ្ជូនចូលទៅក្នុង Supabase
-                  ដើម្បីឲ្យ AI យកទៅឆ្លើយ។
+                  {lang === "km"
+                    ? "បន្ថែមព័ត៌មានផលិតផល តម្លៃ ប្រូម៉ូសិន ឬលក្ខខណ្ឌដឹកជញ្ជូនចូលទៅក្នុង Supabase ដើម្បីឲ្យ AI យកទៅឆ្លើយ។"
+                    : "Add product details, pricing, promo, or delivery info into Supabase for AI responses."}
                 </p>
 
                 <form onSubmit={handleAddKnowledge} className="space-y-4">
                   <div>
-                    <label className="text-[14.5px] font-semibold text-slate-700">ប្រភេទ</label>
+                    <label className="text-[14.5px] font-semibold text-slate-700">{t.itemCategory}</label>
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
                       className="w-full mt-1.5 text-[15px] font-medium border border-amber-200 rounded-xl p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
                     >
-                      <option value="Product">ព័ត៌មានទំនិញ (Product Details)</option>
-                      <option value="Pricing">តម្លៃ &amp; ប្រូម៉ូសិន (Pricing &amp; Promo)</option>
-                      <option value="Shipping">ការដឹកជញ្ជូន (Shipping &amp; Delivery)</option>
-                      <option value="FAQ">សំណួរញឹកញាប់ (General FAQ)</option>
+                      <option value="Product">{lang === "km" ? "ព័ត៌មានទំនិញ (Product Details)" : "Product Details"}</option>
+                      <option value="Pricing">{lang === "km" ? "តម្លៃ & ប្រូម៉ូសិន (Pricing & Promo)" : "Pricing & Promo"}</option>
+                      <option value="Shipping">{lang === "km" ? "ការដឹកជញ្ជូន (Shipping & Delivery)" : "Shipping & Delivery"}</option>
+                      <option value="FAQ">{lang === "km" ? "សំណួរញឹកញាប់ (General FAQ)" : "General FAQ"}</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="text-[14.5px] font-semibold text-slate-700">ចំណងជើង</label>
+                    <label className="text-[14.5px] font-semibold text-slate-700">{t.itemTitle}</label>
                     <input
                       type="text"
-                      placeholder="ឧ. Kidney Pro ឃីដនី ប្រូ 1 កំប៉ុង"
+                      placeholder={lang === "km" ? "ឧ. Kidney Pro ឃីដនី ប្រូ 1 កំប៉ុង" : "e.g., Kidney Pro 1 Bottle"}
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
                       className="w-full mt-1.5 text-[15px] font-medium border border-amber-200 rounded-xl p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -2271,10 +2332,10 @@ export default function Dashboard() {
                   </div>
 
                   <div>
-                    <label className="text-[14.5px] font-semibold text-slate-700">ខ្លឹមសារ</label>
+                    <label className="text-[14.5px] font-semibold text-slate-700">{t.itemContent}</label>
                     <textarea
                       rows={4}
-                      placeholder="បញ្ចូលព័ត៌មានលម្អិត តម្លៃ ប្រូម៉ូសិន ឬការណែនាំ..."
+                      placeholder={lang === "km" ? "បញ្ចូលព័ត៌មានលម្អិត តម្លៃ ប្រូម៉ូសិន ឬការណែនាំ..." : "Enter details, pricing, promo, or instructions..."}
                       value={newContent}
                       onChange={(e) => setNewContent(e.target.value)}
                       className="w-full mt-1.5 text-[15px] font-medium border border-amber-200 rounded-xl p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -2286,19 +2347,23 @@ export default function Dashboard() {
                     disabled={addingKnowledge || !newTitle || !newContent}
                     className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-2.5 px-4 rounded-xl text-[15px] shadow-xs transition disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    <Plus className="w-4.5 h-4.5" /> រក្សាទុកព័ត៌មាន
+                    <Plus className="w-4.5 h-4.5" /> {lang === "km" ? "រក្សាទុកព័ត៌មាន" : "Save Knowledge"}
                   </button>
                 </form>
               </div>
 
               <div className="lg:col-span-2 space-y-3.5">
                 <h3 className="font-bold text-slate-900 text-[18px]">
-                  ព័ត៌មានកំពុងប្រើប្រាស់ ({pageConfig?.knowledgeItems.length || 0})
+                  {lang === "km"
+                    ? `ព័ត៌មានកំពុងប្រើប្រាស់ (${pageConfig?.knowledgeItems.length || 0})`
+                    : `Active Knowledge Items (${pageConfig?.knowledgeItems.length || 0})`}
                 </h3>
                 <div className="space-y-3.5">
                   {pageConfig?.knowledgeItems.length === 0 ? (
                     <div className="bg-white p-10 rounded-2xl border border-amber-200/80 text-center text-slate-400 text-[15px]">
-                      មិនទាន់មានទិន្នន័យ Knowledge នៅឡើយទេ។ សូមបន្ថែមព័ត៌មានផលិតផលដំបូងរបស់អ្នក!
+                      {lang === "km"
+                        ? "មិនទាន់មានទិន្នន័យ Knowledge នៅឡើយទេ។ សូមបន្ថែមព័ត៌មានផលិតផលដំបូងរបស់អ្នក!"
+                        : "No knowledge items yet. Please add your first product details!"}
                     </div>
                   ) : (
                     pageConfig?.knowledgeItems.map((item) => (
@@ -2321,6 +2386,7 @@ export default function Dashboard() {
                         <button
                           onClick={() => handleDeleteKnowledge(item.id)}
                           className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg transition"
+                          title={t.delete}
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
@@ -2339,15 +2405,17 @@ export default function Dashboard() {
             <div className="bg-white p-7 rounded-2xl border border-amber-200/80 shadow-xs space-y-6 max-w-3xl">
               <div>
                 <h3 className="text-[20px] font-bold text-slate-900">
-                  AI Persona &amp; System Prompt
+                  {t.automationTitle}
                 </h3>
                 <p className="text-[14px] text-slate-500 font-normal mt-0.5">
-                  កំណត់អត្តសញ្ញាណ របៀបនិយាយ និងក្បួនច្បាប់ក្នុងការលក់របស់ AI លើ Facebook Page
+                  {lang === "km"
+                    ? "កំណត់អត្តសញ្ញាណ របៀបនិយាយ និងក្បួនច្បាប់ក្នុងការលក់របស់ AI លើ Facebook Page"
+                    : "Configure AI persona, tone of voice, and sales guidelines for Facebook Page"}
                 </p>
               </div>
 
               <div>
-                <label className="text-[14.5px] font-semibold text-slate-700">System Prompt</label>
+                <label className="text-[14.5px] font-semibold text-slate-700">{t.systemPromptTitle}</label>
                 <textarea
                   rows={7}
                   value={pageConfig?.systemPrompt || ""}
@@ -2365,7 +2433,7 @@ export default function Dashboard() {
                   className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-2.5 px-6 rounded-xl text-[15px] shadow-xs transition disabled:opacity-50 flex items-center gap-2"
                 >
                   <Save className="w-4.5 h-4.5" />
-                  {savingConfig ? "កំពុងរក្សាទុក..." : "រក្សាទុក System Prompt"}
+                  {savingConfig ? (lang === "km" ? "កំពុងរក្សាទុក..." : "Saving...") : (lang === "km" ? "រក្សាទុក System Prompt" : "Save System Prompt")}
                 </button>
               </div>
             </div>
@@ -2380,12 +2448,13 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2.5">
                   <Megaphone className="w-6 h-6 text-[#ea580c]" />
                   <h3 className="font-bold text-slate-900 text-[19px]">
-                    ការផ្សាយពាណិជ្ជកម្ម Meta Ads (ឆាប់ៗនេះ)
+                    {lang === "km" ? "ការផ្សាយពាណិជ្ជកម្ម Meta Ads (ឆាប់ៗនេះ)" : "Meta Ads Manager (Coming Soon)"}
                   </h3>
                 </div>
                 <p className="text-[15px] text-slate-600 leading-relaxed font-medium">
-                  ផ្ទាំងគ្រប់គ្រងយុទ្ធនាការផ្សាយពាណិជ្ជកម្ម (Ads Manager) និងត្រួតពិនិត្យ Ad Spend,
-                  ROAS, និង Cost per Lead ដោយផ្ទាល់តាមរយៈ Meta Marketing API។
+                  {lang === "km"
+                    ? "ផ្ទាំងគ្រប់គ្រងយុទ្ធនាការផ្សាយពាណិជ្ជកម្ម (Ads Manager) និងត្រួតពិនិត្យ Ad Spend, ROAS, និង Cost per Lead ដោយផ្ទាល់តាមរយៈ Meta Marketing API។"
+                    : "Manage ad campaigns and monitor Ad Spend, ROAS, and Cost per Lead directly via Meta Marketing API."}
                 </p>
               </div>
             </div>
@@ -2418,13 +2487,14 @@ export default function Dashboard() {
                           }`}
                         >
                           {telegramInfo?.isConnected
-                            ? "✓ បានភ្ជាប់ជោគជ័យ"
-                            : "រង់ចាំការភ្ជាប់ Chat ID"}
+                            ? (lang === "km" ? "✓ បានភ្ជាប់ជោគជ័យ" : "✓ Connected")
+                            : (lang === "km" ? "រង់ចាំការភ្ជាប់ Chat ID" : "Awaiting Chat ID")}
                         </span>
                       </div>
                       <p className="text-[14px] text-slate-500 font-normal mt-0.5">
-                        ប្រព័ន្ធផ្ញើសារជូនដំណឹងស្វ័យប្រវត្តិតាម Telegram ពេលមាន Lead ថ្មី,
-                        ការកុម្ម៉ង់ទិញ និងរំលឹក Follow-up
+                        {lang === "km"
+                          ? "ប្រព័ន្ធផ្ញើសារជូនដំណឹងស្វ័យប្រវត្តិតាម Telegram ពេលមាន Lead ថ្មី, ការកុម្ម៉ង់ទិញ និងរំលឹក Follow-up"
+                          : "Automated Telegram notifications for new leads, orders, and follow-up reminders"}
                       </p>
                     </div>
                   </div>
@@ -2435,7 +2505,7 @@ export default function Dashboard() {
                     rel="noreferrer"
                     className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-[14.5px] font-bold shadow-xs transition shrink-0"
                   >
-                    <Send className="w-4 h-4" /> បើក Telegram Bot
+                    <Send className="w-4 h-4" /> {lang === "km" ? "បើក Telegram Bot" : "Open Telegram Bot"}
                   </a>
                 </div>
 
@@ -2459,7 +2529,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[14.5px] font-medium">
                   <div className="p-4 bg-amber-50/40 rounded-xl border border-amber-200/60 space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-slate-500">ឈ្មោះ Bot:</span>
+                      <span className="text-slate-500">{lang === "km" ? "ឈ្មោះ Bot:" : "Bot Name:"}</span>
                       <strong className="text-slate-800">
                         {telegramInfo?.bot?.first_name || "My CEO Assistant"}
                       </strong>
@@ -2471,7 +2541,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500">ស្ថានភាព Bot API:</span>
+                      <span className="text-slate-500">{lang === "km" ? "ស្ថានភាព Bot API:" : "Bot API Status:"}</span>
                       <span className="text-emerald-700 font-bold flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Active Online
                       </span>
@@ -2480,7 +2550,7 @@ export default function Dashboard() {
 
                   <div className="p-4 bg-amber-50/40 rounded-xl border border-amber-200/60 space-y-2.5">
                     <label className="text-slate-600 font-semibold block text-[14px]">
-                      Telegram Chat ID (សម្រាប់ទទួលសារ):
+                      {lang === "km" ? "Telegram Chat ID (សម្រាប់ទទួលសារ):" : "Telegram Chat ID (Recipient):"}
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -2494,7 +2564,7 @@ export default function Dashboard() {
                         onClick={handleSaveTelegramChatId}
                         className="px-3.5 py-1.5 bg-orange-600 hover:bg-orange-700 text-white text-[13.5px] font-bold rounded-lg transition shadow-xs"
                       >
-                        រក្សាទុក
+                        {lang === "km" ? "រក្សាទុក" : "Save"}
                       </button>
                     </div>
                   </div>
@@ -2508,7 +2578,9 @@ export default function Dashboard() {
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[15px] font-bold shadow-xs transition disabled:opacity-50"
                   >
                     <RefreshCw className={`w-4 h-4 ${detectingTelegram ? "animate-spin" : ""}`} />
-                    {detectingTelegram ? "កំពុងស្វែងរក Chat ID..." : "🔍 ស្វែងរក Telegram Chat ID ដោយស្វ័យប្រវត្តិ"}
+                    {detectingTelegram
+                      ? (lang === "km" ? "កំពុងស្វែងរក Chat ID..." : "Detecting Chat ID...")
+                      : (lang === "km" ? "🔍 ស្វែងរក Telegram Chat ID ដោយស្វ័យប្រវត្តិ" : "🔍 Auto-detect Telegram Chat ID")}
                   </button>
 
                   <button
@@ -2517,33 +2589,39 @@ export default function Dashboard() {
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-200 bg-white hover:bg-orange-50/60 text-slate-800 text-[15px] font-semibold transition shadow-xs disabled:opacity-50"
                   >
                     <Send className="w-4 h-4 text-sky-600" />
-                    {testingTelegram ? "កំពុងផ្ញើសារ..." : "🚀 ផ្ញើសារសាកល្បង (Test Alert)"}
+                    {testingTelegram
+                      ? (lang === "km" ? "កំពុងផ្ញើសារ..." : "Sending...")
+                      : (lang === "km" ? "🚀 ផ្ញើសារសាកល្បង (Test Alert)" : "🚀 Send Test Alert")}
                   </button>
                 </div>
 
                 {/* 3 Step Setup Guide */}
                 <div className="p-4.5 bg-[#fffdfa] rounded-xl border border-amber-200/80 space-y-2 text-[14px]">
                   <h4 className="font-bold text-slate-800 text-[15px] flex items-center gap-2">
-                    💡 របៀបភ្ជាប់ Telegram ត្រឹមតែ ៣ ជំហានងាយៗ៖
+                    {lang === "km" ? "💡 របៀបភ្ជាប់ Telegram ត្រឹមតែ ៣ ជំហានងាយៗ៖" : "💡 3 Simple Steps to Connect Telegram:"}
                   </h4>
                   <ol className="list-decimal list-inside space-y-1 text-slate-600 font-medium leading-relaxed">
                     <li>
-                      ចុចប៊ូតុងពណ៌ខៀវ{" "}
+                      {lang === "km" ? "ចុចប៊ូតុងពណ៌ខៀវ " : "Click the blue "}
                       <a
                         href="https://t.me/My_CEO_Assitant_bot"
                         target="_blank"
                         rel="noreferrer"
                         className="text-sky-600 font-bold underline"
                       >
-                        "បើក Telegram Bot"
+                        {lang === "km" ? '"បើក Telegram Bot"' : '"Open Telegram Bot"'}
                       </a>{" "}
-                      ខាងលើ (ឬចូល Telegram ស្វែងរក <code>@My_CEO_Assitant_bot</code>)។
+                      {lang === "km" ? 'ខាងលើ (ឬចូល Telegram ស្វែងរក @My_CEO_Assitant_bot)។' : "button above (or search @My_CEO_Assitant_bot in Telegram)."}
                     </li>
                     <li>
-                      ចុចប៊ូតុង <b>START</b> ក្នុង Telegram (ឬផ្ញើសារអ្វីមួយ ដូចជា "Hello")។ បើចង់ទទួលជាក្រុម សូមទាញ Bot ចូល Group រួចផ្ញើសារមួយ។
+                      {lang === "km"
+                        ? 'ចុចប៊ូតុង START ក្នុង Telegram (ឬផ្ញើសារអ្វីមួយ ដូចជា "Hello")។ បើចង់ទទួលជាក្រុម សូមទាញ Bot ចូល Group រួចផ្ញើសារមួយ។'
+                        : 'Click START in Telegram (or send "Hello"). If you want group alerts, invite the Bot to your Group and send a message.'}
                     </li>
                     <li>
-                      ត្រឡប់មកទីនេះ រួចចុចប៊ូតុង <b>"🔍 ស្វែងរក Telegram Chat ID ដោយស្វ័យប្រវត្តិ"</b> នោះប្រព័ន្ធនឹងចាប់យក Chat ID និងភ្ជាប់ភ្លាមៗ!
+                      {lang === "km"
+                        ? 'ត្រឡប់មកទីនេះ រួចចុចប៊ូតុង "🔍 ស្វែងរក Telegram Chat ID ដោយស្វ័យប្រវត្តិ" នោះប្រព័ន្ធនឹងចាប់យក Chat ID និងភ្ជាប់ភ្លាមៗ!'
+                        : 'Return here and click "🔍 Auto-detect Telegram Chat ID", the system will instantly link your Chat ID!'}
                     </li>
                   </ol>
                 </div>
@@ -2552,7 +2630,7 @@ export default function Dashboard() {
               {/* Card 2: Meta Facebook & Webhook Settings */}
               <div className="bg-white p-7 rounded-2xl border border-amber-200/80 shadow-xs space-y-5">
                 <h3 className="text-[19px] font-bold text-slate-900 border-b border-amber-100 pb-3">
-                  ការតភ្ជាប់ Meta &amp; Webhook Settings
+                  {t.webhookConfig}
                 </h3>
 
                 <div className="space-y-3.5 text-[15px] font-medium">
@@ -2568,9 +2646,9 @@ export default function Dashboard() {
                     {/* Primary Custom Domain Webhook URL */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-1 border-t border-amber-200/50">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-slate-600 font-semibold">Webhook URL (Domain ផ្ទាល់ខ្លួន):</span>
+                        <span className="text-slate-600 font-semibold">{t.domainWebhook}</span>
                         <span className="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
-                          អចិន្ត្រៃយ៍
+                          {lang === "km" ? "អចិន្ត្រៃយ៍" : "Permanent"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -2582,11 +2660,11 @@ export default function Dashboard() {
                             navigator.clipboard.writeText(
                               health?.webhook.customDomainUrl || "https://vannsitha.com/api/webhook"
                             );
-                            alert("បានចម្លង Custom Domain Webhook URL រួចរាល់!");
+                            alert(lang === "km" ? "បានចម្លង Custom Domain Webhook URL រួចរាល់!" : "Copied Custom Domain Webhook URL!");
                           }}
                           className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-bold rounded transition shadow-2xs shrink-0"
                         >
-                          ចម្លង
+                          {t.copy}
                         </button>
                       </div>
                     </div>
@@ -2594,9 +2672,9 @@ export default function Dashboard() {
                     {/* Vercel Direct Webhook URL */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-slate-500">Webhook URL (Vercel Direct):</span>
+                        <span className="text-slate-500">{t.vercelWebhook}</span>
                         <span className="text-[11px] bg-slate-100 text-slate-700 font-medium px-1.5 py-0.5 rounded">
-                          ដំណើរការ ២៤/៧
+                          {lang === "km" ? "ដំណើរការ ២៤/៧" : "24/7 Active"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -2608,33 +2686,33 @@ export default function Dashboard() {
                             navigator.clipboard.writeText(
                               health?.webhook.vercelUrl || "https://vannsitha-ai-sale.vercel.app/api/webhook"
                             );
-                            alert("បានចម្លង Vercel Webhook URL រួចរាល់!");
+                            alert(lang === "km" ? "បានចម្លង Vercel Webhook URL រួចរាល់!" : "Copied Vercel Webhook URL!");
                           }}
                           className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[12px] font-bold rounded transition shadow-2xs shrink-0"
                         >
-                          ចម្លង
+                          {t.copy}
                         </button>
                       </div>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Verify Token:</span>
+                      <span className="text-slate-500">{t.verifyTokenLabel}</span>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-slate-700">chatkh_mvp_secure_token_2026</span>
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText("chatkh_mvp_secure_token_2026");
-                            alert("បានចម្លង Verify Token រួចរាល់!");
+                            alert(lang === "km" ? "បានចម្លង Verify Token រួចរាល់!" : "Copied Verify Token!");
                           }}
                           className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[12px] font-bold rounded transition shadow-2xs shrink-0"
                         >
-                          ចម្លង
+                          {t.copy}
                         </button>
                       </div>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">ស្ថានភាព Token:</span>
+                      <span className="text-slate-500">{t.permanentTokenLabel}</span>
                       <span className="text-emerald-700 font-bold">
-                        Permanent Page Access Token (គ្មានថ្ងៃផុតកំណត់)
+                        {t.permanentTokenValue}
                       </span>
                     </div>
                   </div>
@@ -2653,7 +2731,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4.5 border border-amber-200/80">
             <div className="flex items-center justify-between border-b border-amber-100 pb-3.5">
               <h3 className="font-bold text-slate-900 text-[17px]">
-                បន្ថែមអតិថិជនថ្មី (Manual Lead)
+                {lang === "km" ? "បន្ថែមអតិថិជនថ្មី (Manual Lead)" : "Add New Customer (Manual Lead)"}
               </h3>
               <button
                 onClick={() => setShowAddCustomerModal(false)}
@@ -2665,11 +2743,13 @@ export default function Dashboard() {
 
             <form onSubmit={handleCreateCustomer} className="space-y-3.5 text-[15px] font-medium">
               <div>
-                <label className="font-semibold text-slate-700">ឈ្មោះអតិថិជន *</label>
+                <label className="font-semibold text-slate-700">
+                  {lang === "km" ? "ឈ្មោះអតិថិជន *" : "Customer Name *"}
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="ឧ. សុខ សាន"
+                  placeholder={lang === "km" ? "ឧ. សុខ សាន" : "e.g. Sok San"}
                   value={newCustomerForm.name}
                   onChange={(e) =>
                     setNewCustomerForm({ ...newCustomerForm, name: e.target.value })
@@ -2679,7 +2759,9 @@ export default function Dashboard() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700">លេខទូរស័ព្ទ</label>
+                <label className="font-semibold text-slate-700">
+                  {lang === "km" ? "លេខទូរស័ព្ទ" : "Phone Number"}
+                </label>
                 <input
                   type="text"
                   placeholder="012 345 678"
@@ -2692,7 +2774,9 @@ export default function Dashboard() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700">ផលិតផលចាប់អារម្មណ៍</label>
+                <label className="font-semibold text-slate-700">
+                  {lang === "km" ? "ផលិតផលចាប់អារម្មណ៍" : "Product Interest"}
+                </label>
                 <input
                   type="text"
                   value={newCustomerForm.productInterest}
@@ -2705,7 +2789,9 @@ export default function Dashboard() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-slate-700">ដំណាក់កាល</label>
+                  <label className="font-semibold text-slate-700">
+                    {lang === "km" ? "ដំណាក់កាល" : "Stage"}
+                  </label>
                   <select
                     value={newCustomerForm.stage}
                     onChange={(e) =>
@@ -2713,17 +2799,19 @@ export default function Dashboard() {
                     }
                     className="w-full mt-1.5 p-2.5 border border-amber-200 rounded-xl font-medium bg-white"
                   >
-                    <option value="NEW_LEAD">អតិថិជនថ្មី</option>
-                    <option value="INTERESTED">ចាប់អារម្មណ៍</option>
-                    <option value="HOT_LEAD">ចង់ទិញខ្លាំង</option>
-                    <option value="FOLLOW_UP">កំពុងតាមដាន</option>
-                    <option value="ORDERED">បានកុម្ម៉ង់ (Won)</option>
-                    <option value="LOST">បោះបង់ (Lost)</option>
+                    <option value="NEW_LEAD">{lang === "km" ? "អតិថិជនថ្មី" : "New Lead"}</option>
+                    <option value="INTERESTED">{lang === "km" ? "ចាប់អារម្មណ៍" : "Interested"}</option>
+                    <option value="HOT_LEAD">{lang === "km" ? "ចង់ទិញខ្លាំង" : "Hot Lead"}</option>
+                    <option value="FOLLOW_UP">{lang === "km" ? "កំពុងតាមដាន" : "Follow-up"}</option>
+                    <option value="ORDERED">{lang === "km" ? "បានកុម្ម៉ង់ (Won)" : "Ordered / Won"}</option>
+                    <option value="LOST">{lang === "km" ? "បោះបង់ (Lost)" : "Lost / Declined"}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-700">អ្នកទទួលបន្ទុក</label>
+                  <label className="font-semibold text-slate-700">
+                    {lang === "km" ? "អ្នកទទួលបន្ទុក" : "Assigned To"}
+                  </label>
                   <input
                     type="text"
                     value={newCustomerForm.assignedSeller}
@@ -2736,10 +2824,12 @@ export default function Dashboard() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700">កំណត់សម្គាល់</label>
+                <label className="font-semibold text-slate-700">
+                  {lang === "km" ? "កំណត់សម្គាល់" : "Notes"}
+                </label>
                 <textarea
                   rows={2}
-                  placeholder="ចំណាំបន្ថែមពីអតិថិជន..."
+                  placeholder={lang === "km" ? "ចំណាំបន្ថែមពីអតិថិជន..." : "Additional notes about customer..."}
                   value={newCustomerForm.notes}
                   onChange={(e) =>
                     setNewCustomerForm({ ...newCustomerForm, notes: e.target.value })
@@ -2754,13 +2844,13 @@ export default function Dashboard() {
                   onClick={() => setShowAddCustomerModal(false)}
                   className="px-4.5 py-2.5 rounded-xl border border-amber-200 text-slate-700 hover:bg-orange-50/50 font-semibold"
                 >
-                  បោះបង់
+                  {lang === "km" ? "បោះបង់" : "Cancel"}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold shadow-xs transition"
                 >
-                  បង្កើតអតិថិជន
+                  {lang === "km" ? "បង្កើតអតិថិជន" : "Create Customer"}
                 </button>
               </div>
             </form>
@@ -2775,7 +2865,9 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4.5 border border-amber-200/80">
             <div className="flex items-center justify-between border-b border-amber-100 pb-3.5">
-              <h3 className="font-bold text-slate-900 text-[17px]">កែប្រែព័ត៌មានអតិថិជន</h3>
+              <h3 className="font-bold text-slate-900 text-[17px]">
+                {lang === "km" ? "កែប្រែព័ត៌មានអតិថិជន" : "Edit Customer Details"}
+              </h3>
               <button
                 onClick={() => setEditingCustomer(null)}
                 className="text-slate-400 hover:text-slate-600"
@@ -2789,7 +2881,9 @@ export default function Dashboard() {
               className="space-y-3.5 text-[15px] font-medium"
             >
               <div>
-                <label className="font-semibold text-slate-700">ឈ្មោះអតិថិជន</label>
+                <label className="font-semibold text-slate-700">
+                  {lang === "km" ? "ឈ្មោះអតិថិជន" : "Customer Name"}
+                </label>
                 <input
                   type="text"
                   required
@@ -2802,7 +2896,9 @@ export default function Dashboard() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700">លេខទូរស័ព្ទ</label>
+                <label className="font-semibold text-slate-700">
+                  {lang === "km" ? "លេខទូរស័ព្ទ" : "Phone Number"}
+                </label>
                 <input
                   type="text"
                   value={editingCustomer.phone || ""}
@@ -2814,7 +2910,9 @@ export default function Dashboard() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700">ផលិតផលចាប់អារម្មណ៍</label>
+                <label className="font-semibold text-slate-700">
+                  {lang === "km" ? "ផលិតផលចាប់អារម្មណ៍" : "Product Interest"}
+                </label>
                 <input
                   type="text"
                   value={editingCustomer.productInterest || ""}
@@ -2827,7 +2925,9 @@ export default function Dashboard() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-slate-700">ដំណាក់កាល</label>
+                  <label className="font-semibold text-slate-700">
+                    {lang === "km" ? "ដំណាក់កាល" : "Stage"}
+                  </label>
                   <select
                     value={editingCustomer.stage}
                     onChange={(e) =>
@@ -2835,17 +2935,19 @@ export default function Dashboard() {
                     }
                     className="w-full mt-1.5 p-2.5 border border-amber-200 rounded-xl font-medium bg-white"
                   >
-                    <option value="NEW_LEAD">អតិថិជនថ្មី</option>
-                    <option value="INTERESTED">ចាប់អារម្មណ៍</option>
-                    <option value="HOT_LEAD">ចង់ទិញខ្លាំង</option>
-                    <option value="FOLLOW_UP">កំពុងតាមដាន</option>
-                    <option value="ORDERED">បានកុម្ម៉ង់ (Won)</option>
-                    <option value="LOST">បោះបង់ (Lost)</option>
+                    <option value="NEW_LEAD">{lang === "km" ? "អតិថិជនថ្មី" : "New Lead"}</option>
+                    <option value="INTERESTED">{lang === "km" ? "ចាប់អារម្មណ៍" : "Interested"}</option>
+                    <option value="HOT_LEAD">{lang === "km" ? "ចង់ទិញខ្លាំង" : "Hot Lead"}</option>
+                    <option value="FOLLOW_UP">{lang === "km" ? "កំពុងតាមដាន" : "Follow-up"}</option>
+                    <option value="ORDERED">{lang === "km" ? "បានកុម្ម៉ង់ (Won)" : "Ordered / Won"}</option>
+                    <option value="LOST">{lang === "km" ? "បោះបង់ (Lost)" : "Lost / Declined"}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-700">អ្នកទទួលបន្ទុក</label>
+                  <label className="font-semibold text-slate-700">
+                    {lang === "km" ? "អ្នកទទួលបន្ទុក" : "Assigned To"}
+                  </label>
                   <input
                     type="text"
                     value={editingCustomer.assignedSeller || ""}
@@ -2858,7 +2960,9 @@ export default function Dashboard() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700">កំណត់សម្គាល់</label>
+                <label className="font-semibold text-slate-700">
+                  {lang === "km" ? "កំណត់សម្គាល់" : "Notes"}
+                </label>
                 <textarea
                   rows={2}
                   value={editingCustomer.notes || ""}
@@ -2875,13 +2979,13 @@ export default function Dashboard() {
                   onClick={() => setEditingCustomer(null)}
                   className="px-4.5 py-2.5 rounded-xl border border-amber-200 text-slate-700 hover:bg-orange-50/50 font-semibold"
                 >
-                  បោះបង់
+                  {lang === "km" ? "បោះបង់" : "Cancel"}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold shadow-xs transition"
                 >
-                  រក្សាទុកការកែប្រែ
+                  {lang === "km" ? "រក្សាទុកការកែប្រែ" : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -2898,10 +3002,14 @@ export default function Dashboard() {
             <div className="flex items-center justify-between border-b border-amber-100 pb-3.5">
               <div>
                 <h3 className="font-bold text-slate-900 text-[18px]">
-                  កាលវិភាគ Follow-up: {schedulingCustomer.name}
+                  {lang === "km"
+                    ? `កាលវិភាគ Follow-up: ${schedulingCustomer.name}`
+                    : `Schedule Follow-up: ${schedulingCustomer.name}`}
                 </h3>
                 <p className="text-[13.5px] text-slate-500 font-normal mt-0.5">
-                  កំណត់កាលវិភាគ និងអនុញ្ញាតឲ្យ AI Gemini Draft សារជាភាសាខ្មែរ
+                  {lang === "km"
+                    ? "កំណត់កាលវិភាគ និងអនុញ្ញាតឲ្យ AI Gemini Draft សារ"
+                    : "Set schedule and let Gemini AI draft a message"}
                 </p>
               </div>
               <button
@@ -2916,7 +3024,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label className="font-semibold text-slate-700">
-                    មូលហេតុ Follow-up *
+                    {lang === "km" ? "មូលហេតុ Follow-up *" : "Follow-up Reason *"}
                   </label>
                   <select
                     value={scheduleForm.reason}
@@ -2927,20 +3035,22 @@ export default function Dashboard() {
                     }}
                     className="w-full mt-1.5 p-2.5 border border-amber-200 rounded-xl bg-white font-medium focus:ring-2 focus:ring-orange-400"
                   >
-                    <option value="NEED_TO_THINK">សុំគិតមើលសិន (Need to think)</option>
-                    <option value="PRICE_OBJECTION">តម្លៃរាងថ្លៃ (Price objection)</option>
-                    <option value="WAITING_SALARY">ចាំបើកប្រាក់ខែ (Waiting salary)</option>
-                    <option value="NO_RESPONSE">បាត់ការឆ្លើយតប (No response)</option>
-                    <option value="ASK_FAMILY">សុំសួរគ្រួសារ (Ask family/spouse)</option>
+                    <option value="NEED_TO_THINK">{lang === "km" ? "សុំគិតមើលសិន (Need to think)" : "Need to think"}</option>
+                    <option value="PRICE_OBJECTION">{lang === "km" ? "តម្លៃរាងថ្លៃ (Price objection)" : "Price objection"}</option>
+                    <option value="WAITING_SALARY">{lang === "km" ? "ចាំបើកប្រាក់ខែ (Waiting salary)" : "Waiting for salary"}</option>
+                    <option value="NO_RESPONSE">{lang === "km" ? "បាត់ការឆ្លើយតប (No response)" : "No response / Ghosting"}</option>
+                    <option value="ASK_FAMILY">{lang === "km" ? "សុំសួរគ្រួសារ (Ask family/spouse)" : "Ask family/spouse"}</option>
                     <option value="INTERESTED_NOT_READY">
-                      មិនទាន់រួចរាល់ (Interested not ready)
+                      {lang === "km" ? "មិនទាន់រួចរាល់ (Interested not ready)" : "Interested but not ready"}
                     </option>
-                    <option value="OTHER">មូលហេតុផ្សេងៗ (Other)</option>
+                    <option value="OTHER">{lang === "km" ? "មូលហេតុផ្សេងៗ (Other)" : "Other reason"}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-700">ថ្ងៃ &amp; ម៉ោងកំណត់ *</label>
+                  <label className="font-semibold text-slate-700">
+                    {lang === "km" ? "ថ្ងៃ & ម៉ោងកំណត់ *" : "Scheduled Date & Time *"}
+                  </label>
                   <input
                     type="datetime-local"
                     required
@@ -2955,10 +3065,12 @@ export default function Dashboard() {
 
               {scheduleForm.reason === "OTHER" && (
                 <div>
-                  <label className="font-semibold text-slate-700">បញ្ជាក់មូលហេតុបន្ថែម</label>
+                  <label className="font-semibold text-slate-700">
+                    {lang === "km" ? "បញ្ជាក់មូលហេតុបន្ថែម" : "Specify Custom Reason"}
+                  </label>
                   <input
                     type="text"
-                    placeholder="បញ្ជាក់មូលហេតុបន្ថែម..."
+                    placeholder={lang === "km" ? "បញ្ជាក់មូលហេតុបន្ថែម..." : "Specify custom reason..."}
                     value={scheduleForm.customReason}
                     onChange={(e) =>
                       setScheduleForm({ ...scheduleForm, customReason: e.target.value })
@@ -2971,7 +3083,7 @@ export default function Dashboard() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[14.5px] font-semibold text-slate-700">
-                    សារ Follow-up ដែល AI ព្រាងទុក (Khmer Draft)
+                    {lang === "km" ? "សារ Follow-up ដែល AI ព្រាងទុក" : "AI Suggested Message Draft"}
                   </label>
                   <button
                     type="button"
@@ -2986,7 +3098,9 @@ export default function Dashboard() {
                     className="text-[13.5px] text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1.5"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    {generatingAiDraft ? "កំពុងព្រាងសារ..." : "ព្រាងសារ AI ថ្មី"}
+                    {generatingAiDraft
+                      ? (lang === "km" ? "កំពុងព្រាងសារ..." : "Drafting...")
+                      : (lang === "km" ? "ព្រាងសារ AI ថ្មី" : "Re-draft AI Message")}
                   </button>
                 </div>
 
@@ -2996,7 +3110,7 @@ export default function Dashboard() {
                   onChange={(e) =>
                     setScheduleForm({ ...scheduleForm, aiSuggestedText: e.target.value })
                   }
-                  placeholder="AI នឹងរៀបចំសេចក្តីព្រាងសារជាភាសាខ្មែរនៅទីនេះ..."
+                  placeholder={lang === "km" ? "AI នឹងរៀបចំសេចក្តីព្រាងសារនៅទីនេះ..." : "AI will draft the follow-up message here..."}
                   className="w-full p-3 border border-amber-200 rounded-xl bg-[#fffdfa] focus:bg-white leading-relaxed text-[15px] font-medium focus:ring-2 focus:ring-orange-400"
                 />
               </div>
@@ -3007,13 +3121,13 @@ export default function Dashboard() {
                   onClick={() => setSchedulingCustomer(null)}
                   className="px-4.5 py-2.5 rounded-xl border border-amber-200 text-slate-700 hover:bg-orange-50/50 font-semibold"
                 >
-                  បោះបង់
+                  {lang === "km" ? "បោះបង់" : "Cancel"}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold shadow-xs flex items-center gap-2 text-[15px] transition"
                 >
-                  <Calendar className="w-4 h-4" /> រក្សាទុកកាលវិភាគ
+                  <Calendar className="w-4 h-4" /> {lang === "km" ? "រក្សាទុកកាលវិភាគ" : "Save Schedule"}
                 </button>
               </div>
             </form>
