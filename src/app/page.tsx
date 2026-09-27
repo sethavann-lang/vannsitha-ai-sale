@@ -231,6 +231,15 @@ const REASON_LABELS: Record<string, { label: string; khmer: string }> = {
   OTHER: { label: "Other", khmer: "មូលហេតុផ្សេងៗ" },
 };
 
+// Ask AI Copilot Session Types
+interface AskAiSession {
+  id: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+  messages: Array<{ role: "user" | "model"; text: string }>;
+}
+
 export default function Dashboard() {
   const [activeNav, setActiveNav] = useState<
     | "overview"
@@ -477,18 +486,151 @@ export default function Dashboard() {
     }
   };
 
-  // Ask AI Assistant Copilot State
+  // Ask AI Assistant Copilot State & Recents History (Google Sheets Gemini style)
   const [askAiOpen, setAskAiOpen] = useState(false);
+  const [askAiView, setAskAiView] = useState<"chat" | "recents">("chat");
   const [askAiInput, setAskAiInput] = useState("");
   const [askAiLoading, setAskAiLoading] = useState(false);
-  const [askAiMessages, setAskAiMessages] = useState<Array<{ role: "user" | "model"; text: string }>>([]);
+  const [askAiSessions, setAskAiSessions] = useState<AskAiSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
+  // Storage key per user ensures 100% privacy between Admin and Staff
+  const getAskAiStorageKey = () => {
+    return currentUser?.username
+      ? `vst_ask_ai_sessions_${currentUser.username.toLowerCase()}`
+      : "vst_ask_ai_sessions_default";
+  };
+
+  // Load sessions when currentUser loads or changes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const key = getAskAiStorageKey();
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAskAiSessions(parsed);
+          setActiveSessionId(parsed[0].id);
+        } else {
+          setAskAiSessions([]);
+          setActiveSessionId(null);
+        }
+      } else {
+        setAskAiSessions([]);
+        setActiveSessionId(null);
+      }
+    } catch (e) {
+      console.error("Failed to load Ask AI sessions:", e);
+    }
+  }, [currentUser]);
+
+  // Helper to persist sessions
+  const saveAskAiSessions = (sessions: AskAiSession[]) => {
+    setAskAiSessions(sessions);
+    if (typeof window !== "undefined") {
+      try {
+        const key = getAskAiStorageKey();
+        localStorage.setItem(key, JSON.stringify(sessions));
+      } catch (e) {
+        console.error("Failed to save Ask AI sessions:", e);
+      }
+    }
+  };
+
+  // Active session and its messages
+  const activeSession = askAiSessions.find((s) => s.id === activeSessionId) || null;
+  const askAiMessages = activeSession ? activeSession.messages : [];
+
+  // Start a new chat (like clicking the Edit/Pencil icon in Google Sheets Gemini)
+  const handleStartNewChat = () => {
+    const newId = `session_${Date.now()}`;
+    const newSession: AskAiSession = {
+      id: newId,
+      title: lang === "km" ? "ការសន្ទនាថ្មី" : "New Conversation",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      messages: [],
+    };
+    saveAskAiSessions([newSession, ...askAiSessions]);
+    setActiveSessionId(newId);
+    setAskAiView("chat");
+    setAskAiInput("");
+  };
+
+  // Delete a session
+  const handleDeleteSession = (sessionIdToDelete: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const updated = askAiSessions.filter((s) => s.id !== sessionIdToDelete);
+    saveAskAiSessions(updated);
+    if (activeSessionId === sessionIdToDelete) {
+      setActiveSessionId(updated.length > 0 ? updated[0].id : null);
+    }
+  };
+
+  const formatSessionDate = (timestamp: number) => {
+    try {
+      const d = new Date(timestamp);
+      const now = new Date();
+      const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) {
+        return lang === "km"
+          ? `ថ្ងៃនេះ ${d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`
+          : `Today ${d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`;
+      } else if (diffDays === 1) {
+        return lang === "km" ? "ម្សិលមិញ" : "Yesterday";
+      } else {
+        return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      }
+    } catch (e) {
+      return "";
+    }
+  };
+
+  // Send message
   const handleSendAskAi = async (overrideQuestion?: string) => {
     const q = (overrideQuestion || askAiInput).trim();
     if (!q || askAiLoading) return;
 
-    const newMessages = [...askAiMessages, { role: "user" as const, text: q }];
-    setAskAiMessages(newMessages);
+    let targetSessionId = activeSessionId;
+    let targetSession = askAiSessions.find((s) => s.id === targetSessionId);
+
+    // If no active session exists, create one now
+    if (!targetSessionId || !targetSession) {
+      targetSessionId = `session_${Date.now()}`;
+      targetSession = {
+        id: targetSessionId,
+        title: q.length > 45 ? q.substring(0, 45) + "..." : q,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        messages: [],
+      };
+    } else if (
+      targetSession.messages.length === 0 ||
+      targetSession.title === "ការសន្ទនាថ្មី" ||
+      targetSession.title === "New Conversation"
+    ) {
+      // Set title to first question
+      targetSession = {
+        ...targetSession,
+        title: q.length > 45 ? q.substring(0, 45) + "..." : q,
+      };
+    }
+
+    const currentMsgs = targetSession.messages || [];
+    const newMsgs = [...currentMsgs, { role: "user" as const, text: q }];
+
+    // Immediately update session in state & storage
+    const updatedSession: AskAiSession = {
+      ...targetSession,
+      updatedAt: Date.now(),
+      messages: newMsgs,
+    };
+    const otherSessions = askAiSessions.filter((s) => s.id !== targetSessionId);
+    const updatedSessions = [updatedSession, ...otherSessions];
+    saveAskAiSessions(updatedSessions);
+    setActiveSessionId(targetSessionId);
+    setAskAiView("chat");
     setAskAiInput("");
     setAskAiLoading(true);
 
@@ -498,29 +640,37 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: q,
-          history: askAiMessages,
+          history: currentMsgs,
         }),
       });
       const data = await res.json();
-      if (data?.success && data?.answer) {
-        setAskAiMessages([...newMessages, { role: "model", text: data.answer }]);
-      } else {
-        setAskAiMessages([
-          ...newMessages,
-          {
-            role: "model",
-            text: data?.error || "សូមអភ័យទោស មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ AI សូមព្យាយាមម្តងទៀត។",
-          },
-        ]);
-      }
+      const botReply =
+        data?.success && data?.answer
+          ? data.answer
+          : data?.error ||
+            (lang === "km"
+              ? "សូមអភ័យទោស មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ AI សូមព្យាយាមម្តងទៀត។"
+              : "Sorry, unable to connect to AI. Please try again.");
+
+      const finalMsgs = [...newMsgs, { role: "model" as const, text: botReply }];
+      const finalSession: AskAiSession = {
+        ...updatedSession,
+        updatedAt: Date.now(),
+        messages: finalMsgs,
+      };
+      saveAskAiSessions([finalSession, ...otherSessions]);
     } catch (err: any) {
-      setAskAiMessages([
-        ...newMessages,
-        {
-          role: "model",
-          text: "មានបញ្ហាបច្ចេកទេសក្នុងការទាក់ទង AI សូមពិនិត្យការតភ្ជាប់អ៊ីនធឺណិត។",
-        },
-      ]);
+      const errorReply =
+        lang === "km"
+          ? "មានបញ្ហាបច្ចេកទេសក្នុងការទាក់ទង AI សូមពិនិត្យការតភ្ជាប់អ៊ីនធឺណិត។"
+          : "Technical error contacting AI. Please check internet connection.";
+      const finalMsgs = [...newMsgs, { role: "model" as const, text: errorReply }];
+      const finalSession: AskAiSession = {
+        ...updatedSession,
+        updatedAt: Date.now(),
+        messages: finalMsgs,
+      };
+      saveAskAiSessions([finalSession, ...otherSessions]);
     } finally {
       setAskAiLoading(false);
     }
@@ -4028,7 +4178,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      {/* Ask AI Copilot Floating Panel */}
+      {/* Ask AI Copilot Floating Panel (Google Sheets Gemini Recents Style) */}
       {askAiOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-end justify-end p-0 sm:p-5 sm:pointer-events-none">
           {/* Mobile backdrop */}
@@ -4037,44 +4187,81 @@ export default function Dashboard() {
             onClick={() => setAskAiOpen(false)}
           />
 
-          <div className="relative w-full sm:w-[440px] h-[90vh] sm:h-[620px] max-h-[92vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-amber-200/90 flex flex-col overflow-hidden pointer-events-auto z-10 animate-in slide-in-from-bottom-5 duration-200">
-            {/* Copilot Header */}
-            <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-amber-600 text-white px-4 py-3 sm:py-3.5 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center border border-white/30 shadow-2xs">
-                  <Sparkles className="w-4 h-4 text-white animate-pulse" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-[15px] leading-tight tracking-wide">
-                      Ask AI
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded-full bg-white/25 text-[10.5px] font-semibold tracking-wider uppercase">
-                      Copilot
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-amber-100 flex items-center gap-1.5 font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    <span>{lang === "km" ? "ភ្ជាប់ទិន្នន័យហាងជាក់ស្តែង" : "Live Store & Guide"}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1">
-                {askAiMessages.length > 0 && (
+          <div className="relative w-full sm:w-[450px] h-[92vh] sm:h-[630px] max-h-[94vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-amber-200/90 flex flex-col overflow-hidden pointer-events-auto z-10 animate-in slide-in-from-bottom-5 duration-200">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-amber-600 text-white px-4 py-3 sm:py-3.5 flex items-center justify-between shadow-sm select-none">
+              {askAiView === "recents" ? (
+                /* Recents View Header (Like Google Sheets Gemini Recents) */
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setAskAiMessages([])}
-                    className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/15 transition cursor-pointer"
-                    title={lang === "km" ? "លុបប្រវត្តិសន្ទនា" : "Clear conversation"}
+                    onClick={() => setAskAiView("chat")}
+                    className="p-1.5 rounded-lg text-white hover:bg-white/15 transition cursor-pointer"
+                    title={lang === "km" ? "ត្រឡប់ទៅការសន្ទនា" : "Back to chat"}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <span className="font-bold text-[15px] tracking-wide">
+                    {lang === "km" ? "ប្រវត្តិសន្ទនា (Recents)" : "Recents"}
+                  </span>
+                </div>
+              ) : (
+                /* Chat View Header */
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center border border-white/30 shadow-2xs">
+                    <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[15px] leading-tight tracking-wide">
+                        Ask AI
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-white/25 text-[10.5px] font-semibold tracking-wider uppercase">
+                        Copilot
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-amber-100 flex items-center gap-1.5 font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      <span>{lang === "km" ? "ភ្ជាប់ទិន្នន័យហាងជាក់ស្តែង" : "Live Store & Guide"}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Header Right Actions */}
+              <div className="flex items-center gap-1.5">
+                {askAiView === "chat" && (
+                  <button
+                    type="button"
+                    onClick={() => setAskAiView("recents")}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-white text-[12px] font-semibold transition cursor-pointer shadow-2xs"
+                    title={lang === "km" ? "មើលប្រវត្តិសន្ទនាទាំងអស់" : "View Recents"}
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>{lang === "km" ? "ប្រវត្តិ" : "Recents"}</span>
+                    {askAiSessions.length > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full bg-white text-orange-600 text-[10px] font-extrabold ml-0.5">
+                        {askAiSessions.length}
+                      </span>
+                    )}
                   </button>
                 )}
+
+                {/* New Chat Button (Pencil / Edit Icon like Google Sheets) */}
+                <button
+                  type="button"
+                  onClick={handleStartNewChat}
+                  className="p-1.5 rounded-lg text-white/90 hover:text-white hover:bg-white/15 transition cursor-pointer"
+                  title={lang === "km" ? "ចាប់ផ្តើមការសន្ទនាថ្មី" : "Start New Chat"}
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+
+                {/* Close Button */}
                 <button
                   type="button"
                   onClick={() => setAskAiOpen(false)}
-                  className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/15 transition cursor-pointer"
+                  className="p-1.5 rounded-lg text-white/90 hover:text-white hover:bg-white/15 transition cursor-pointer"
                   title={lang === "km" ? "បិទ" : "Close"}
                 >
                   <X className="w-5 h-5" />
@@ -4082,135 +4269,243 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Copilot Chat Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#fefbf6] via-[#faf6ee] to-[#f7f2e7]">
-              {/* Welcome Banner & Suggestion Chips */}
-              {askAiMessages.length === 0 && (
-                <div className="space-y-3.5">
-                  <div className="bg-white/90 rounded-2xl p-4 border border-amber-200/80 shadow-2xs">
-                    <div className="flex items-center gap-2 text-orange-600 font-bold text-[14px] mb-1.5">
-                      <Bot className="w-4 h-4" />
-                      <span>{lang === "km" ? "សួស្តីបង! ខ្ញុំអាចជួយអ្វីបានខ្លះ?" : "Hello! How can I assist you?"}</span>
-                    </div>
-                    <p className="text-[12.5px] text-slate-600 leading-relaxed">
-                      {lang === "km"
-                        ? "ខ្ញុំជា AI Copilot ប្រចាំប្រព័ន្ធ VANN SITHA AI Sale Studio។ បងអាចសួរអំពីរបៀបប្រើប្រាស់ប្រព័ន្ធ (CRM, Follow-up, Inbox, បន្ថែមបុគ្គលិក) ឬសួរទិន្នន័យជាក់ស្តែង និងព័ត៌មាន Kidney Pro បានគ្រប់ពេល!"
-                        : "I am your VANN SITHA AI Copilot. Ask me how to use any system features, check live store metrics, or get Kidney Pro product details."}
-                    </p>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wider px-1">
-                      {lang === "km" ? "សំណួរគំរូដែលនិយមសួរ" : "Suggested Prompts"}
-                    </div>
-                    <div className="grid grid-cols-1 gap-1.5">
-                      {[
-                        {
-                          km: "📊 សង្ខេបស្ថិតិអតិថិជន និងការលក់បច្ចុប្បន្ន",
-                          en: "📊 Summary of customers and current sales",
-                        },
-                        {
-                          km: "💊 តើ Kidney Pro មានអត្ថប្រយោជន៍ និងតម្លៃប៉ុន្មាន?",
-                          en: "💊 Kidney Pro benefits and pricing?",
-                        },
-                        {
-                          km: "👥 របៀបបន្ថែមគណនីបុគ្គលិកថ្មីឱ្យចូលប្រើ?",
-                          en: "👥 How to add a new staff account?",
-                        },
-                        {
-                          km: "💬 របៀបផ្អាក AI ដើម្បីឆាតផ្ទាល់ជាមួយភ្ញៀវ?",
-                          en: "💬 How to pause AI to chat directly?",
-                        },
-                        {
-                          km: "📅 របៀបកំណត់ពេល Follow-up និងឱ្យ AI ជួយព្រាងសារ?",
-                          en: "📅 How to schedule follow-up and draft AI reply?",
-                        },
-                      ].map((item, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleSendAskAi(lang === "km" ? item.km : item.en)}
-                          className="w-full text-left px-3 py-2 rounded-xl bg-white hover:bg-orange-50/80 border border-amber-200/70 hover:border-orange-300 text-[12.5px] text-slate-700 hover:text-orange-950 font-medium transition shadow-2xs cursor-pointer flex items-center justify-between group"
-                        >
-                          <span className="truncate">{lang === "km" ? item.km : item.en}</span>
-                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-orange-600 transition flex-shrink-0 ml-1" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Chat Messages */}
-              {askAiMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex flex-col ${
-                    msg.role === "user" ? "items-end" : "items-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed shadow-2xs ${
-                      msg.role === "user"
-                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-tr-xs"
-                        : "bg-white text-slate-800 border border-amber-200/80 rounded-tl-xs whitespace-pre-wrap"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                  <span className="text-[10px] text-slate-400 mt-1 px-1">
-                    {msg.role === "user" ? (lang === "km" ? "អ្នក" : "You") : "Ask AI Copilot"}
-                  </span>
-                </div>
-              ))}
-
-              {/* Loading Indicator */}
-              {askAiLoading && (
-                <div className="flex items-start gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                  </div>
-                  <div className="bg-white border border-amber-200/80 rounded-2xl rounded-tl-xs px-4 py-2.5 shadow-2xs flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" />
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce [animation-delay:0.2s]" />
-                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-bounce [animation-delay:0.4s]" />
-                    <span className="text-[12px] text-slate-500 font-medium ml-1">
-                      {lang === "km" ? "កំពុងគិត និងស្រង់ទិន្នន័យ..." : "Analyzing store data..."}
+            {/* Recents View (Google Sheets Gemini Recents Style) */}
+            {askAiView === "recents" ? (
+              <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-[#fefbf6] via-[#faf6ee] to-[#f7f2e7] flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider">
+                      {lang === "km" ? "ការសន្ទនាពីមុន (Recent Chats)" : "Recent Chats"}
+                    </span>
+                    <span className="text-[11.5px] text-slate-400 font-medium">
+                      {currentUser?.fullName || currentUser?.username}
                     </span>
                   </div>
-                </div>
-              )}
-            </div>
 
-            {/* Copilot Input Footer */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendAskAi();
-              }}
-              className="p-3 bg-white border-t border-amber-100 flex items-center gap-2"
-            >
-              <input
-                type="text"
-                value={askAiInput}
-                onChange={(e) => setAskAiInput(e.target.value)}
-                placeholder={
-                  lang === "km"
-                    ? "សួរ AI អំពីប្រព័ន្ធ ឬទិន្នន័យហាង..."
-                    : "Ask AI about system or store data..."
-                }
-                disabled={askAiLoading}
-                className="flex-1 px-3.5 py-2.5 rounded-xl border border-amber-200/90 bg-[#fffdfa] focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[13.5px] disabled:opacity-50"
-              />
-              <button
-                type="submit"
-                disabled={askAiLoading || !askAiInput.trim()}
-                className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:opacity-40 text-white flex items-center justify-center shadow-xs transition active:scale-95 cursor-pointer flex-shrink-0"
-                title={lang === "km" ? "ផ្ញើសំណួរ" : "Send question"}
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+                  {askAiSessions.length === 0 ? (
+                    <div className="text-center py-12 px-4 bg-white/80 rounded-2xl border border-amber-200/80 shadow-2xs">
+                      <MessageSquare className="w-10 h-10 text-amber-300 mx-auto mb-2 opacity-70" />
+                      <p className="text-slate-700 font-bold text-[14px]">
+                        {lang === "km" ? "មិនទាន់មានប្រវត្តិសន្ទនានៅឡើយទេ" : "No recent conversations"}
+                      </p>
+                      <p className="text-slate-500 text-[12px] mt-1 max-w-[280px] mx-auto">
+                        {lang === "km"
+                          ? "រាល់ពេលបងសួរ AI ប្រព័ន្ធនឹងកត់ត្រាប្រធានបទនៅទីនេះដោយស្វ័យប្រវត្តិ"
+                          : "Every time you chat with AI, your conversation history will appear here"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleStartNewChat}
+                        className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-[13px] shadow-xs inline-flex items-center gap-1.5 cursor-pointer transition active:scale-95"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>{lang === "km" ? "ចាប់ផ្តើមការសន្ទនាថ្មី" : "Start New Chat"}</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {askAiSessions.map((session) => {
+                        const isSelected = session.id === activeSessionId;
+                        return (
+                          <div
+                            key={session.id}
+                            onClick={() => {
+                              setActiveSessionId(session.id);
+                              setAskAiView("chat");
+                            }}
+                            className={`group p-3 rounded-2xl border transition-all cursor-pointer flex items-start justify-between gap-2.5 ${
+                              isSelected
+                                ? "bg-orange-50 border-orange-300 shadow-2xs ring-1 ring-orange-200"
+                                : "bg-white border-amber-200/80 hover:border-orange-300 hover:bg-orange-50/50 shadow-2xs"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                              <div
+                                className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                                  isSelected
+                                    ? "bg-orange-500 text-white"
+                                    : "bg-orange-100 text-orange-600 group-hover:bg-orange-200"
+                                }`}
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-[13px] font-bold text-slate-800 group-hover:text-orange-950 truncate">
+                                  {session.title || (lang === "km" ? "ការសន្ទនាថ្មី" : "New Conversation")}
+                                </div>
+                                <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                  <span>{formatSessionDate(session.updatedAt || session.createdAt)}</span>
+                                  <span>•</span>
+                                  <span>
+                                    {session.messages.length} {lang === "km" ? "សារ" : "messages"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteSession(session.id, e)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer flex-shrink-0"
+                              title={lang === "km" ? "លុបប្រវត្តិសន្ទនានេះ" : "Delete conversation"}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-amber-200/60 mt-3">
+                  <button
+                    type="button"
+                    onClick={handleStartNewChat}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-[13px] shadow-sm flex items-center justify-center gap-2 cursor-pointer transition active:scale-98"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{lang === "km" ? "ចាប់ផ្តើមការសន្ទនាថ្មី" : "Start New Chat"}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Chat View */
+              <>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#fefbf6] via-[#faf6ee] to-[#f7f2e7]">
+                  {/* Welcome Banner & Suggestion Chips when empty */}
+                  {askAiMessages.length === 0 && (
+                    <div className="space-y-3.5">
+                      <div className="bg-white/90 rounded-2xl p-4 border border-amber-200/80 shadow-2xs">
+                        <div className="flex items-center gap-2 text-orange-600 font-bold text-[14px] mb-1.5">
+                          <Bot className="w-4 h-4" />
+                          <span>
+                            {lang === "km"
+                              ? `សួស្តីបង ${currentUser?.fullName || ""}! ខ្ញុំអាចជួយអ្វីបានខ្លះ?`
+                              : `Hello ${currentUser?.fullName || ""}! How can I assist you?`}
+                          </span>
+                        </div>
+                        <p className="text-[12.5px] text-slate-600 leading-relaxed">
+                          {lang === "km"
+                            ? "ខ្ញុំជា AI Copilot ប្រចាំប្រព័ន្ធ VANN SITHA AI Sale Studio។ បងអាចសួរអំពីរបៀបប្រើប្រាស់ប្រព័ន្ធ (CRM, Follow-up, Inbox, បន្ថែមបុគ្គលិក) ឬសួរទិន្នន័យជាក់ស្តែង និងព័ត៌មាន Kidney Pro បានគ្រប់ពេល!"
+                            : "I am your VANN SITHA AI Copilot. Ask me how to use any system features, check live store metrics, or get Kidney Pro product details."}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wider px-1">
+                          {lang === "km" ? "សំណួរគំរូដែលនិយមសួរ" : "Suggested Prompts"}
+                        </div>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {[
+                            {
+                              km: "📊 សង្ខេបស្ថិតិអតិថិជន និងការលក់បច្ចុប្បន្ន",
+                              en: "📊 Summary of customers and current sales",
+                            },
+                            {
+                              km: "💊 តើ Kidney Pro មានអត្ថប្រយោជន៍ និងតម្លៃប៉ុន្មាន?",
+                              en: "💊 Kidney Pro benefits and pricing?",
+                            },
+                            {
+                              km: "👥 របៀបបន្ថែមគណនីបុគ្គលិកថ្មីឱ្យចូលប្រើ?",
+                              en: "👥 How to add a new staff account?",
+                            },
+                            {
+                              km: "💬 របៀបផ្អាក AI ដើម្បីឆាតផ្ទាល់ជាមួយភ្ញៀវ?",
+                              en: "💬 How to pause AI to chat directly?",
+                            },
+                            {
+                              km: "📅 របៀបកំណត់ពេល Follow-up និងឱ្យ AI ជួយព្រាងសារ?",
+                              en: "📅 How to schedule follow-up and draft AI reply?",
+                            },
+                          ].map((item, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleSendAskAi(lang === "km" ? item.km : item.en)}
+                              className="w-full text-left px-3 py-2 rounded-xl bg-white hover:bg-orange-50/80 border border-amber-200/70 hover:border-orange-300 text-[12.5px] text-slate-700 hover:text-orange-950 font-medium transition shadow-2xs cursor-pointer flex items-center justify-between group"
+                            >
+                              <span className="truncate">{lang === "km" ? item.km : item.en}</span>
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-orange-600 transition flex-shrink-0 ml-1" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Chat Messages */}
+                  {askAiMessages.map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex flex-col ${
+                        msg.role === "user" ? "items-end" : "items-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed shadow-2xs ${
+                          msg.role === "user"
+                            ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-tr-xs"
+                            : "bg-white text-slate-800 border border-amber-200/80 rounded-tl-xs whitespace-pre-wrap"
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                      <span className="text-[10px] text-slate-400 mt-1 px-1">
+                        {msg.role === "user" ? (lang === "km" ? "អ្នក" : "You") : "Ask AI Copilot"}
+                      </span>
+                    </div>
+                  ))}
+
+                  {/* Loading Indicator */}
+                  {askAiLoading && (
+                    <div className="flex items-start gap-2">
+                      <div className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
+                        <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                      </div>
+                      <div className="bg-white border border-amber-200/80 rounded-2xl rounded-tl-xs px-4 py-2.5 shadow-2xs flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" />
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce [animation-delay:0.2s]" />
+                        <span className="w-2 h-2 rounded-full bg-orange-400 animate-bounce [animation-delay:0.4s]" />
+                        <span className="text-[12px] text-slate-500 font-medium ml-1">
+                          {lang === "km" ? "កំពុងគិត និងស្រង់ទិន្នន័យ..." : "Analyzing store data..."}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Copilot Input Footer */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendAskAi();
+                  }}
+                  className="p-3 bg-white border-t border-amber-100 flex items-center gap-2"
+                >
+                  <input
+                    type="text"
+                    value={askAiInput}
+                    onChange={(e) => setAskAiInput(e.target.value)}
+                    placeholder={
+                      lang === "km"
+                        ? "សួរ AI អំពីប្រព័ន្ធ ឬទិន្នន័យហាង..."
+                        : "Ask AI about system or store data..."
+                    }
+                    disabled={askAiLoading}
+                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-amber-200/90 bg-[#fffdfa] focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[13.5px] disabled:opacity-50"
+                  />
+                  <button
+                    type="submit"
+                    disabled={askAiLoading || !askAiInput.trim()}
+                    className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:opacity-40 text-white flex items-center justify-center shadow-xs transition active:scale-95 cursor-pointer flex-shrink-0"
+                    title={lang === "km" ? "ផ្ញើសំណួរ" : "Send question"}
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
