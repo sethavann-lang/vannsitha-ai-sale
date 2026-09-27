@@ -8,16 +8,16 @@ export const translations = {
     brandRole: "ប្រព័ន្ធ AI គ្រប់គ្រងការលក់ & CRM",
     proStudio: "PRO STUDIO",
     ownerBadge: "Vann Sitha / Owner",
-    ownerRole: "ម្ចាស់អាជីវកម្ម / Admin",
+    ownerRole: "ម្ចាស់អាជីវកម្ម",
 
     // Navigation
     navOverview: "ទិដ្ឋភាពទូទៅ",
-    navCustomers: "អតិថិជន (CRM)",
-    navPipeline: "ដំណើរការលក់ (Pipeline)",
-    navFollowups: "ការតាមដាន (Follow-ups)",
-    navInbox: "ការសន្ទនាផ្ទាល់ (Inbox)",
-    navKnowledge: "ចំណេះដឹងផលិតផល (Knowledge)",
-    navAutomation: "ស្វ័យប្រវត្តិកម្ម & AI",
+    navCustomers: "អតិថិជន",
+    navPipeline: "ដំណើរការលក់",
+    navFollowups: "ការតាមដាន",
+    navInbox: "ការសន្ទនាផ្ទាល់",
+    navKnowledge: "ចំណេះដឹងផលិតផល",
+    navAutomation: "ស្វ័យប្រវត្តិកម្ម",
     navAds: "ការផ្សាយពាណិជ្ជកម្ម",
     navSettings: "ការកំណត់ប្រព័ន្ធ",
     comingSoon: "ឆាប់ៗ",
@@ -61,7 +61,7 @@ export const translations = {
     inboxReplyDesc: "សន្ទនា និងបិទការលក់ដោយស្វ័យប្រវត្តិតាម AI",
 
     // CRM Customers
-    crmTitle: "បញ្ជីអតិថិជន & CRM Leads",
+    crmTitle: "បញ្ជីអតិថិជន",
     customerListSub: "គ្រប់គ្រងទិន្នន័យអតិថិជន លេខទូរស័ព្ទ និងប្រវត្តិតាមដានការលក់",
     crmSearchPlaceholder: "ស្វែងរកតាមឈ្មោះ, លេខទូរស័ព្ទ, ឬផលិតផល...",
     allStages: "គ្រប់ដំណាក់កាល",
@@ -84,7 +84,7 @@ export const translations = {
     loadingCustomers: "កំពុងទាញយកទិន្នន័យអតិថិជន...",
 
     // Pipeline Kanban
-    pipelineTitle: "ដំណើរការលក់ (Sales Pipeline)",
+    pipelineTitle: "ដំណើរការលក់",
     pipelineSub: "តាមដានដំណាក់កាលលក់ទាំង ៦ (អតិថិជនថ្មី ➔ ចាប់អារម្មណ៍ ➔ ចង់ទិញខ្លាំង ➔ កំពុងតាមដាន ➔ បានកុម្ម៉ង់ ➔ បោះបង់)",
     stageNewLead: "អតិថិជនថ្មី",
     stageInterested: "ចាប់អារម្មណ៍",
@@ -94,7 +94,7 @@ export const translations = {
     stageLost: "មិនទាន់ទិញ / បដិសេធ",
 
     // Follow-ups
-    followupsTitle: "កាលវិភាគតាមដាន & AI ព្រាងសារ (Follow-up Tasks)",
+    followupsTitle: "កាលវិភាគតាមដាន & ព្រាងសារ AI",
     followupsSub: "តាមដានកាលវិភាគ Follow-up, Overdue Reminders និងពិនិត្យអនុម័តសារដែល AI Gemini Draft",
     scheduleFollowupBtn: "កំណត់ពេលតាមដានថ្មី",
     scheduledAt: "កាលបរិច្ឆេទ & ម៉ោង",
@@ -110,7 +110,7 @@ export const translations = {
     allFilter: "ទាំងអស់",
 
     // Inbox
-    inboxTitle: "ការសន្ទនាផ្ទាល់ (Messenger Inbox)",
+    inboxTitle: "ការសន្ទនាផ្ទាល់",
     pauseAi: "ផ្អាក AI",
     resumeAi: "បើក AI វិញ",
     aiActive: "AI កំពុងឆ្លើយតប",
@@ -119,7 +119,7 @@ export const translations = {
     waitingReply: "រង់ចាំការឆ្លើយតប",
 
     // Knowledge Base
-    knowledgeTitle: "ចំណេះដឹងផលិតផល (Knowledge Base)",
+    knowledgeTitle: "ចំណេះដឹងផលិតផល",
     addKnowledgeBtn: "បន្ថែមចំណេះដឹងថ្មី",
     itemTitle: "ចំណងជើង",
     itemCategory: "ប្រភេទទំនិញ",
@@ -159,7 +159,7 @@ export const translations = {
 
     // Navigation
     navOverview: "Overview",
-    navCustomers: "Customers (CRM)",
+    navCustomers: "Customers",
     navPipeline: "Sales Pipeline",
     navFollowups: "Follow-ups",
     navInbox: "Live Inbox",

@@ -1142,7 +1142,7 @@ export default function Dashboard() {
               {activeNav === "conversations" && t.navInbox}
               {activeNav === "knowledge" && t.navKnowledge}
               {activeNav === "automation" && t.navAutomation}
-              {activeNav === "ads" && (lang === "km" ? "ការផ្សាយពាណិជ្ជកម្ម (Meta Ads Manager)" : "Meta Ads Manager")}
+              {activeNav === "ads" && (lang === "km" ? "ការផ្សាយពាណិជ្ជកម្ម" : "Meta Ads Manager")}
               {activeNav === "settings" && t.navSettings}
             </h2>
             <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200/80">
