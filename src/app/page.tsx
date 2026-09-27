@@ -1648,66 +1648,66 @@ export default function Dashboard() {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left min-w-[880px]">
-                    <thead className="bg-amber-50/50 text-slate-800 text-[14px] font-semibold border-b border-amber-200/80">
+                  <table className="w-full text-left">
+                    <thead className="bg-amber-50/50 text-slate-800 text-[13px] font-semibold border-b border-amber-200/80">
                       <tr>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.customerColName}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.customerColSource}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap min-w-[180px]">{lang === "km" ? "សារចុងក្រោយ" : "Last Message"}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap min-w-[180px]">{t.colAiReply}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.colTime}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.colStatus}</th>
-                        <th className="px-5 py-3.5 text-right whitespace-nowrap">{t.customerColActions}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.customerColName}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.customerColSource}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap min-w-[140px] max-w-[200px]">{lang === "km" ? "សារចុងក្រោយ" : "Last Message"}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap min-w-[140px] max-w-[200px]">{t.colAiReply}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.colTime}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.colStatus}</th>
+                        <th className="px-3 sm:px-4 py-3 text-right whitespace-nowrap">{t.customerColActions}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-amber-100/60 text-[15px] font-medium">
+                    <tbody className="divide-y divide-amber-100/60 text-[13.5px] font-medium">
                       {recentConvs.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="px-5 py-10 text-center text-slate-400">
+                          <td colSpan={7} className="px-4 py-10 text-center text-slate-400">
                             {lang === "km" ? "មិនទាន់មានការសន្ទនានៅឡើយទេ។" : "No recent conversations yet."}
                           </td>
                         </tr>
                       ) : (
                         recentConvs.map((conv) => (
                           <tr key={conv.id} className="hover:bg-amber-50/30 transition">
-                            <td className="px-5 py-4 font-semibold text-slate-900 whitespace-nowrap">
+                            <td className="px-3 sm:px-4 py-2.5 font-semibold text-slate-900 whitespace-nowrap">
                               {conv.customerName}
                             </td>
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-semibold bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap">
+                            <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[12px] font-semibold bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap">
                                 <MessageCircle className="w-3.5 h-3.5 shrink-0" /> {conv.source}
                               </span>
                             </td>
-                            <td className="px-5 py-4 text-slate-600 max-w-xs truncate">
+                            <td className="px-3 sm:px-4 py-2.5 text-slate-600 max-w-[180px] truncate">
                               {conv.lastUserMessage}
                             </td>
-                            <td className="px-5 py-4 text-slate-500 max-w-xs truncate">
+                            <td className="px-3 sm:px-4 py-2.5 text-slate-500 max-w-[180px] truncate">
                               {conv.lastAiReply}
                             </td>
-                            <td className="px-5 py-4 text-slate-500 text-[14px] whitespace-nowrap">
+                            <td className="px-3 sm:px-4 py-2.5 text-slate-500 text-[13px] whitespace-nowrap">
                               {new Date(conv.updatedAt).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}
                             </td>
-                            <td className="px-5 py-4 whitespace-nowrap">
+                            <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">
                               {conv.isAiPaused ? (
-                                <span className="inline-flex items-center gap-1.5 text-[13px] px-3 py-1 rounded-full font-semibold bg-amber-100 text-amber-800 border border-amber-200 whitespace-nowrap">
-                                  <PauseCircle className="w-4 h-4 text-amber-700 shrink-0" /> {t.humanHandled}
+                                <span className="inline-flex items-center gap-1 text-[12px] px-2.5 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800 border border-amber-200 whitespace-nowrap">
+                                  <PauseCircle className="w-3.5 h-3.5 text-amber-700 shrink-0" /> {t.humanHandled}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1.5 text-[13px] px-3 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap">
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> {t.aiActive}
+                                <span className="inline-flex items-center gap-1 text-[12px] px-2.5 py-0.5 rounded-full font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> {t.aiActive}
                                 </span>
                               )}
                             </td>
-                            <td className="px-5 py-4 text-right whitespace-nowrap">
+                            <td className="px-3 sm:px-4 py-2.5 text-right whitespace-nowrap">
                               <button
                                 onClick={() => {
                                   setSelectedConvId(conv.id);
                                   setActiveNav("conversations");
                                 }}
-                                className="text-[14px] font-semibold text-orange-600 hover:text-orange-800 px-3.5 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100/80 transition border border-orange-200/60 whitespace-nowrap cursor-pointer"
+                                className="text-[13px] font-semibold text-orange-600 hover:text-orange-800 px-3 py-1 rounded-lg bg-orange-50 hover:bg-orange-100/80 transition border border-orange-200/60 whitespace-nowrap cursor-pointer"
                               >
                                 {t.openChat}
                               </button>
@@ -1789,29 +1789,29 @@ export default function Dashboard() {
               {/* Customers Data Table */}
               <div className="bg-white rounded-2xl border border-amber-200/80 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left min-w-[1050px]">
-                    <thead className="bg-amber-50/50 text-slate-800 text-[14px] font-semibold border-b border-amber-200/80">
+                  <table className="w-full text-left">
+                    <thead className="bg-amber-50/50 text-slate-800 text-[13px] font-semibold border-b border-amber-200/80">
                       <tr>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.customerColName}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.customerColPhone}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.customerColProduct}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.customerColStage}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.customerColAssigned}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.customerColLastContact}</th>
-                        <th className="px-5 py-3.5 whitespace-nowrap">{t.customerColNextFollowUp}</th>
-                        <th className="px-5 py-3.5 text-right whitespace-nowrap">{t.customerColActions}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.customerColName}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.customerColPhone}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.customerColProduct}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.customerColStage}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.customerColAssigned}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.customerColLastContact}</th>
+                        <th className="px-3 sm:px-4 py-3 whitespace-nowrap">{t.customerColNextFollowUp}</th>
+                        <th className="px-3 sm:px-4 py-3 text-right whitespace-nowrap">{t.customerColActions}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-amber-100/60 text-[15px] font-medium">
+                    <tbody className="divide-y divide-amber-100/60 text-[13.5px] font-medium">
                       {crmLoading ? (
                         <tr>
-                          <td colSpan={8} className="px-5 py-10 text-center text-slate-400">
+                          <td colSpan={8} className="px-4 py-10 text-center text-slate-400">
                             {t.loadingCustomers}
                           </td>
                         </tr>
                       ) : customers.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="px-5 py-10 text-center text-slate-400">
+                          <td colSpan={8} className="px-4 py-10 text-center text-slate-400">
                             {lang === "km" ? "មិនមានទិន្នន័យអតិថិជនដែលត្រូវនឹងលក្ខខណ្ឌស្វែងរកឡើយ។" : "No customers match your search query."}
                           </td>
                         </tr>
@@ -1823,94 +1823,103 @@ export default function Dashboard() {
 
                           return (
                             <tr key={c.id} className="hover:bg-amber-50/30 transition">
-                              <td className="px-5 py-4 whitespace-nowrap">
-                                <div className="font-semibold text-slate-900">{c.name}</div>
+                              <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">
+                                <div className="font-semibold text-slate-900 text-[13.5px]">{c.name}</div>
                                 <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className="text-[12px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono whitespace-nowrap">
+                                  <span className="text-[11px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono whitespace-nowrap">
                                     {c.source}
                                   </span>
                                   {c.psid && (
-                                    <span className="text-[12px] text-slate-400 font-mono whitespace-nowrap">
+                                    <span className="text-[11px] text-slate-400 font-mono whitespace-nowrap">
                                       PSID: ...{c.psid.slice(-4)}
                                     </span>
                                   )}
                                 </div>
                               </td>
-                              <td className="px-5 py-4 whitespace-nowrap">
+                              <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">
                                 {c.phone ? (
-                                  <span className="font-mono text-[15px] text-blue-600 font-semibold flex items-center gap-1.5 whitespace-nowrap">
+                                  <span className="font-mono text-[13.5px] text-blue-600 font-semibold flex items-center gap-1.5 whitespace-nowrap">
                                     <Phone className="w-3.5 h-3.5 shrink-0" /> {c.phone}
                                   </span>
                                 ) : (
-                                  <span className="text-slate-400 italic whitespace-nowrap">{t.noPhone}</span>
+                                  <span className="text-slate-400 italic text-[12.5px] whitespace-nowrap">{t.noPhone}</span>
                                 )}
                               </td>
-                              <td className="px-5 py-4 text-slate-700 whitespace-nowrap">
-                                {c.productInterest || "Kidney Pro ឃីដនី ប្រូ"}
+                              <td className="px-3 sm:px-4 py-2.5 text-slate-700 whitespace-nowrap text-[13px]">
+                                {c.productInterest || (lang === "km" ? "Kidney Pro (ឃីដនី ប្រូ)" : "Kidney Pro")}
                               </td>
-                              <td className="px-5 py-4 whitespace-nowrap">
+                              <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">
                                 <span
-                                  className={`text-[13px] px-3 py-1 rounded-full font-semibold border inline-flex items-center whitespace-nowrap ${stageConf.bg} ${stageConf.color} ${stageConf.border}`}
+                                  className={`text-[12px] px-2.5 py-0.5 rounded-full font-semibold border inline-flex items-center whitespace-nowrap ${stageConf.bg} ${stageConf.color} ${stageConf.border}`}
                                 >
                                   {lang === "km" ? stageConf.khmer : stageConf.label}
                                 </span>
                               </td>
-                              <td className="px-5 py-4 text-slate-600 whitespace-nowrap">
+                              <td className="px-3 sm:px-4 py-2.5 text-slate-600 whitespace-nowrap text-[13px]">
                                 {c.assignedSeller || "Vann Sitha"}
                               </td>
-                              <td className="px-5 py-4 text-slate-500 text-[14.5px] whitespace-nowrap">
+                              <td className="px-3 sm:px-4 py-2.5 text-slate-500 text-[13px] whitespace-nowrap">
                                 {new Date(c.lastContactAt).toLocaleDateString()}
                               </td>
-                              <td className="px-5 py-4 whitespace-nowrap">
+                              <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">
                                 {c.nextFollowUpAt ? (
                                   <div
-                                    className={`flex items-center gap-1.5 text-[14px] whitespace-nowrap ${
+                                    className={`flex items-center gap-1.5 text-[13px] whitespace-nowrap ${
                                       isOverdue ? "text-[#ea580c] font-bold" : "text-slate-700"
                                     }`}
                                   >
-                                    <Clock className="w-4 h-4 shrink-0" />
+                                    <Clock className="w-3.5 h-3.5 shrink-0" />
                                     <span>{new Date(c.nextFollowUpAt).toLocaleString()}</span>
                                     {isOverdue && (
-                                      <span className="text-[11px] px-2 py-0.5 rounded bg-orange-100 text-[#ea580c] font-bold whitespace-nowrap">
+                                      <span className="text-[10.5px] px-1.5 py-0.5 rounded bg-orange-100 text-[#ea580c] font-bold whitespace-nowrap">
                                         {lang === "km" ? "ហួសពេល" : "Overdue"}
                                       </span>
                                     )}
                                   </div>
                                 ) : (
-                                  <span className="text-slate-400 italic whitespace-nowrap">{lang === "km" ? "មិនទាន់កំណត់" : "Not scheduled"}</span>
+                                  <span className="text-slate-400 italic text-[12px] whitespace-nowrap">{lang === "km" ? "មិនទាន់កំណត់" : "Not scheduled"}</span>
                                 )}
                               </td>
-                              <td className="px-5 py-4 text-right whitespace-nowrap">
-                                <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                              <td className="px-3 sm:px-4 py-2.5 text-right whitespace-nowrap">
+                                <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                                  {/* 1. Chat icon on left (or fixed width placeholder) */}
+                                  {c.psid ? (
+                                    <button
+                                      onClick={() => {
+                                        setActiveNav("conversations");
+                                        const conv = conversations.find((cn) => cn.psid === c.psid);
+                                        if (conv) setSelectedConvId(conv.id);
+                                      }}
+                                      title={lang === "km" ? "បើកការសន្ទនា Messenger" : "Open Messenger Chat"}
+                                      className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-orange-50 text-orange-600 transition shrink-0 cursor-pointer"
+                                    >
+                                      <MessageSquare className="w-3.5 h-3.5" />
+                                    </button>
+                                  ) : (
+                                    <div className="w-7 h-7 shrink-0" />
+                                  )}
+
+                                  {/* 2. Edit icon on left */}
+                                  <button
+                                    onClick={() => setEditingCustomer(c)}
+                                    title={lang === "km" ? "កែប្រែទិន្នន័យ" : "Edit Customer"}
+                                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-amber-50 text-slate-400 hover:text-slate-700 transition shrink-0 cursor-pointer"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {/* 3. Follow-up Button (Fixed width & perfectly aligned across all rows) */}
                                   <button
                                     onClick={() => {
                                       setSchedulingCustomer(c);
                                       handleGenerateAiSuggestion(c.id, "NEED_TO_THINK");
                                     }}
-                                    title="កំណត់ពេល Follow-up"
-                                    className="text-[13.5px] px-3 py-1.5 rounded-xl bg-orange-50 text-[#ea580c] hover:bg-orange-100 font-semibold transition flex items-center gap-1.5 border border-orange-200/60 whitespace-nowrap cursor-pointer"
+                                    title={lang === "km" ? "កំណត់ពេល Follow-up" : "Schedule Follow-up"}
+                                    className="w-[104px] h-[30px] rounded-lg bg-orange-50 hover:bg-orange-100 text-[#ea580c] font-semibold transition flex items-center justify-center gap-1.5 border border-orange-200/70 whitespace-nowrap cursor-pointer text-[12.5px] shrink-0"
                                   >
-                                    <Calendar className="w-3.5 h-3.5 shrink-0" /> {lang === "km" ? "តាមដាន" : "Follow-up"}
+                                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                                    <span>{lang === "km" ? "តាមដាន" : "Follow-up"}</span>
                                   </button>
-                                  <button
-                                    onClick={() => setEditingCustomer(c)}
-                                    title="កែប្រែទិន្នន័យ"
-                                    className="p-1.5 rounded-lg hover:bg-amber-50 text-slate-600 transition shrink-0 cursor-pointer"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </button>
-                                  {c.conversations && c.conversations[0] && (
-                                    <button
-                                      onClick={() => {
-                                        setSelectedConvId(c.conversations![0].id);
-                                        setActiveNav("conversations");
-                                      }}
-                                      title="បើក Chat"
-                                      className="p-1.5 rounded-lg hover:bg-amber-50 text-orange-600 transition shrink-0 cursor-pointer"
-                                    >
-                                      <MessageSquare className="w-4 h-4" />
-                                    </button>
-                                  )}
                                 </div>
                               </td>
                             </tr>
