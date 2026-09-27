@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionToken, COOKIE_NAME, TOKEN_TTL_SECONDS } from "@/lib/auth";
+import { verifyPassword } from "@/lib/password";
+import { prisma } from "@/lib/db";
 
 /**
  * Constant-time string comparison using fixed-length SHA-256 digests
@@ -18,15 +20,14 @@ export async function POST(req: NextRequest) {
     const adminPassword = process.env.ADMIN_PASSWORD?.trim();
     const adminUsername = (process.env.ADMIN_USERNAME || "admin").trim();
 
-    // FAIL CLOSED: If ADMIN_PASSWORD or AUTH_SECRET is not configured in env, refuse login with 500 error
-    if (!adminPassword || !authSecret) {
+    if (!authSecret) {
       console.error(
-        "[Auth] Configuration error: ADMIN_PASSWORD or AUTH_SECRET is missing from environment variables."
+        "[Auth] Configuration error: AUTH_SECRET is missing from environment variables."
       );
       return NextResponse.json(
         {
           error:
-            "ការកំណត់សុវត្ថិភាពមិនទាន់រួចរាល់ (ADMIN_PASSWORD ឬ AUTH_SECRET មិនទាន់បានកំណត់ក្នុង Environment Variables ឡើយ)",
+            "ការកំណត់សុវត្ថិភាពមិនទាន់រួចរាល់ (AUTH_SECRET មិនទាន់បានកំណត់ក្នុង Environment Variables ឡើយ)",
         },
         { status: 500 }
       );
@@ -43,23 +44,65 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isUserValid = timingSafeCompare(username, adminUsername);
-    const isPassValid = timingSafeCompare(password, adminPassword);
+    let authenticatedUser: {
+      username: string;
+      fullName: string;
+      role: "ADMIN" | "STAFF";
+      userId?: string;
+    } | null = null;
 
-    if (!isUserValid || !isPassValid) {
+    // 1. Check Master Admin from environment variables
+    if (adminPassword && timingSafeCompare(username, adminUsername) && timingSafeCompare(password, adminPassword)) {
+      authenticatedUser = {
+        username: adminUsername,
+        fullName: "Vann Sitha (Owner)",
+        role: "ADMIN",
+      };
+    } else {
+      // 2. Query Database User (Staff or Additional Admins)
+      const dbUser = await prisma.user.findUnique({
+        where: { username },
+      });
+
+      if (dbUser) {
+        if (!dbUser.isActive) {
+          return NextResponse.json(
+            { error: "គណនីនេះត្រូវបានផ្អាកដំណើរការជាបណ្តោះអាសន្ន។ សូមទាក់ទងម្ចាស់គ្រប់គ្រង" },
+            { status: 403 }
+          );
+        }
+
+        const isMatch = verifyPassword(password, dbUser.passwordHash);
+        if (isMatch) {
+          authenticatedUser = {
+            username: dbUser.username,
+            fullName: dbUser.fullName,
+            role: dbUser.role as "ADMIN" | "STAFF",
+            userId: dbUser.id,
+          };
+        }
+      }
+    }
+
+    if (!authenticatedUser) {
       return NextResponse.json(
         { error: "ឈ្មោះអ្នកប្រើប្រាស់ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ" },
         { status: 401 }
       );
     }
 
-    const token = await createSessionToken(username);
+    const token = await createSessionToken({
+      username: authenticatedUser.username,
+      fullName: authenticatedUser.fullName,
+      role: authenticatedUser.role,
+      userId: authenticatedUser.userId,
+    });
     const isProd = process.env.NODE_ENV === "production";
 
     const res = NextResponse.json({
       success: true,
       message: "ចូលប្រព័ន្ធជោគជ័យ",
-      user: { username },
+      user: authenticatedUser,
     });
 
     res.cookies.set(COOKIE_NAME, token, {
@@ -72,8 +115,9 @@ export async function POST(req: NextRequest) {
 
     return res;
   } catch (error: any) {
+    console.error("[Auth Login Error]", error);
     return NextResponse.json(
-      { error: error?.message || "មានបញ្ហាក្នុងការផ្ទៀងផ្ទាត់" },
+      { error: error?.message || "មានបញ្ហាក្នុងការផ្ទៀងផ្ទាត់ សូមព្យាយាមម្តងទៀត" },
       { status: 500 }
     );
   }

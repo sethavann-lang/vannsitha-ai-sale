@@ -41,11 +41,20 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
   );
 }
 
+export interface SessionUser {
+  username: string;
+  role?: "ADMIN" | "STAFF";
+  fullName?: string;
+  userId?: string;
+}
+
 /**
  * Creates a signed session token.
  * FAILS CLOSED: Throws an error if AUTH_SECRET is not configured in env.
  */
-export async function createSessionToken(username: string): Promise<string> {
+export async function createSessionToken(
+  user: string | SessionUser
+): Promise<string> {
   const secret = process.env.AUTH_SECRET?.trim();
   if (!secret) {
     throw new Error("AUTH_SECRET is not configured in environment variables");
@@ -54,8 +63,16 @@ export async function createSessionToken(username: string): Promise<string> {
   const enc = new TextEncoder();
   const key = await getHmacKey(secret);
 
+  const username = typeof user === "string" ? user : user.username;
+  const role = typeof user === "string" ? "ADMIN" : user.role || "STAFF";
+  const fullName = typeof user === "string" ? "Vann Sitha" : user.fullName || username;
+  const userId = typeof user === "string" ? undefined : user.userId;
+
   const payload = {
     sub: username,
+    role,
+    fullName,
+    userId,
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS,
   };
@@ -79,7 +96,13 @@ export async function createSessionToken(username: string): Promise<string> {
  */
 export async function verifySessionToken(
   token: string | undefined | null
-): Promise<{ valid: boolean; username?: string }> {
+): Promise<{
+  valid: boolean;
+  username?: string;
+  role?: "ADMIN" | "STAFF";
+  fullName?: string;
+  userId?: string;
+}> {
   if (!token) return { valid: false };
 
   const secret = process.env.AUTH_SECRET?.trim();
@@ -117,7 +140,13 @@ export async function verifySessionToken(
       return { valid: false };
     }
 
-    return { valid: true, username: payload.sub };
+    return {
+      valid: true,
+      username: payload.sub,
+      role: (payload.role as "ADMIN" | "STAFF") || "ADMIN",
+      fullName: payload.fullName || payload.sub,
+      userId: payload.userId,
+    };
   } catch {
     return { valid: false };
   }
@@ -128,7 +157,13 @@ export async function verifySessionToken(
  */
 export async function verifyAuthRequest(
   req: NextRequest
-): Promise<{ valid: boolean; username?: string }> {
+): Promise<{
+  valid: boolean;
+  username?: string;
+  role?: "ADMIN" | "STAFF";
+  fullName?: string;
+  userId?: string;
+}> {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   return verifySessionToken(token);
 }

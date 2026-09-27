@@ -155,3 +155,23 @@ model ProcessedEvent {
   eventType String   // "comment" or "message"
   createdAt DateTime @default(now())
 }
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+// 8. Staff & User Management (Multi-user System)
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  fullName     String
+  role         UserRole @default(STAFF)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([username])
+}
+

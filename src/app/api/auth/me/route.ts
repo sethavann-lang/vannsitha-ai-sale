@@ -11,6 +11,11 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     authenticated: true,
-    user: { username: result.username },
+    user: {
+      username: result.username,
+      fullName: result.fullName || result.username,
+      role: result.role || "ADMIN",
+      userId: result.userId,
+    },
   });
 }

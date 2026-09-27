@@ -50,6 +50,11 @@ import {
   Volume2,
   Image as ImageIcon,
   Menu,
+  UserPlus,
+  UserCheck,
+  UserX,
+  KeyRound,
+  ShieldAlert,
 } from "lucide-react";
 import { translations, Language } from "@/lib/i18n";
 
@@ -356,6 +361,122 @@ export default function Dashboard() {
     message: string;
   } | null>(null);
 
+  // Current Logged-in User & Staff Management
+  const [currentUser, setCurrentUser] = useState<{
+    username: string;
+    fullName: string;
+    role: "ADMIN" | "STAFF";
+    userId?: string;
+  } | null>(null);
+
+  const [staffList, setStaffList] = useState<any[]>([]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
+  const [showAddStaffModal, setShowAddStaffModal] = useState(false);
+  const [newStaffFullName, setNewStaffFullName] = useState("");
+  const [newStaffUsername, setNewStaffUsername] = useState("");
+  const [newStaffPassword, setNewStaffPassword] = useState("");
+  const [newStaffRole, setNewStaffRole] = useState<"STAFF" | "ADMIN">("STAFF");
+  const [submittingStaff, setSubmittingStaff] = useState(false);
+  const [staffError, setStaffError] = useState("");
+  const [staffSuccess, setStaffSuccess] = useState("");
+
+  const fetchStaffList = async () => {
+    try {
+      setLoadingStaff(true);
+      const res = await fetch("/api/users");
+      const data = await res.json();
+      if (data?.success && Array.isArray(data.users)) {
+        setStaffList(data.users);
+      }
+    } catch (err) {
+      console.error("Failed to load staff list", err);
+    } finally {
+      setLoadingStaff(false);
+    }
+  };
+
+  const handleCreateStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStaffError("");
+    setStaffSuccess("");
+    if (!newStaffFullName.trim()) {
+      setStaffError(lang === "km" ? "សូមបញ្ចូលឈ្មោះបុគ្គលិក" : "Please enter staff full name");
+      return;
+    }
+    if (!newStaffUsername.trim()) {
+      setStaffError(lang === "km" ? "សូមបញ្ចូល Username" : "Please enter username");
+      return;
+    }
+    if (!newStaffPassword || newStaffPassword.length < 4) {
+      setStaffError(lang === "km" ? "ពាក្យសម្ងាត់យ៉ាងតិច ៤ តួអក្សរ" : "Password must be at least 4 characters");
+      return;
+    }
+
+    try {
+      setSubmittingStaff(true);
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: newStaffFullName.trim(),
+          username: newStaffUsername.trim().toLowerCase(),
+          password: newStaffPassword.trim(),
+          role: newStaffRole,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setStaffError(data.error || "មិនអាចបង្កើតគណនីបានទេ");
+        return;
+      }
+
+      setStaffSuccess(data.message || "បានបង្កើតគណនីជោគជ័យ");
+      setNewStaffFullName("");
+      setNewStaffUsername("");
+      setNewStaffPassword("");
+      setNewStaffRole("STAFF");
+      setShowAddStaffModal(false);
+      fetchStaffList();
+    } catch (err: any) {
+      setStaffError(err?.message || "មានបញ្ហាបច្ចេកទេស");
+    } finally {
+      setSubmittingStaff(false);
+    }
+  };
+
+  const handleToggleStaffStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStaffList((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, isActive: !currentStatus } : s))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to toggle staff status", err);
+    }
+  };
+
+  const handleDeleteStaff = async (id: string, name: string) => {
+    if (!confirm(`${t.staffDeleteConfirm} (${name})`)) return;
+    try {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStaffList((prev) => prev.filter((s) => s.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to delete staff", err);
+    }
+  };
+
   const fetchTelegramStatus = async () => {
     try {
       const res = await fetch("/api/telegram");
@@ -598,6 +719,23 @@ export default function Dashboard() {
       }
     }
   };
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.authenticated && data.user) {
+          setCurrentUser(data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (activeNav === "settings" && (!currentUser || currentUser.role === "ADMIN")) {
+      fetchStaffList();
+    }
+  }, [activeNav, currentUser]);
 
   useEffect(() => {
     fetchCustomers();
@@ -953,27 +1091,40 @@ export default function Dashboard() {
 
         {/* Sidebar Bottom Area */}
         <div className="p-3.5 border-t border-amber-200/80 space-y-2.5">
-          <button
-            onClick={() => setActiveNav("settings")}
-            className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition text-[16px] font-semibold cursor-pointer ${
-              activeNav === "settings"
-                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/25 font-bold"
-                : "text-slate-700 hover:text-orange-600 hover:bg-orange-50/70"
-            }`}
-          >
-            <SettingsIcon className={`w-5 h-5 ${activeNav === "settings" ? "text-white" : "text-amber-700"}`} />
-            <span>{t.navSettings}</span>
-          </button>
+          {(!currentUser || currentUser.role === "ADMIN") && (
+            <button
+              onClick={() => setActiveNav("settings")}
+              className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition text-[16px] font-semibold cursor-pointer ${
+                activeNav === "settings"
+                  ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/25 font-bold"
+                  : "text-slate-700 hover:text-orange-600 hover:bg-orange-50/70"
+              }`}
+            >
+              <SettingsIcon className={`w-5 h-5 ${activeNav === "settings" ? "text-white" : "text-amber-700"}`} />
+              <span>{t.navSettings}</span>
+            </button>
+          )}
 
           {/* User Profile Card */}
           <div className="pt-2 flex items-center gap-3 px-3 py-2 rounded-xl bg-amber-50/80 border border-amber-200/80">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center font-bold text-[15px] text-white shadow-sm">
-              VS
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center font-bold text-[14px] text-white shadow-sm shrink-0">
+              {currentUser?.fullName
+                ? currentUser.fullName
+                    .split(" ")
+                    .map((w: string) => w[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()
+                : "VS"}
             </div>
-            <div className="text-left overflow-hidden">
-              <p className="text-[15px] font-bold truncate text-slate-800">Vann Sitha</p>
+            <div className="text-left overflow-hidden flex-1 min-w-0">
+              <p className="text-[15px] font-bold truncate text-slate-800">
+                {currentUser?.fullName || "Vann Sitha"}
+              </p>
               <p className="text-[13px] text-amber-800/80 truncate font-semibold">
-                {t.ownerRole}
+                {currentUser?.role === "STAFF"
+                  ? (lang === "km" ? "បុគ្គលិកលក់" : "Sales Staff")
+                  : t.ownerRole}
               </p>
             </div>
           </div>
@@ -1078,35 +1229,50 @@ export default function Dashboard() {
 
             {/* Bottom Settings & User */}
             <div className="p-3 border-t border-amber-200/80 space-y-2">
-              <button
-                onClick={() => {
-                  setActiveNav("settings");
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-[15px] font-semibold ${
-                  activeNav === "settings"
-                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs font-bold"
-                    : "text-slate-700 hover:text-orange-600 hover:bg-orange-50/70"
-                }`}
-              >
-                <SettingsIcon className={`w-4.5 h-4.5 ${activeNav === "settings" ? "text-white" : "text-amber-700"}`} />
-                <span>{t.navSettings}</span>
-              </button>
+              {(!currentUser || currentUser.role === "ADMIN") && (
+                <button
+                  onClick={() => {
+                    setActiveNav("settings");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-[15px] font-semibold ${
+                    activeNav === "settings"
+                      ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs font-bold"
+                      : "text-slate-700 hover:text-orange-600 hover:bg-orange-50/70"
+                  }`}
+                >
+                  <SettingsIcon className={`w-4.5 h-4.5 ${activeNav === "settings" ? "text-white" : "text-amber-700"}`} />
+                  <span>{t.navSettings}</span>
+                </button>
+              )}
 
               <div className="flex items-center justify-between p-2 rounded-xl bg-amber-50/80 border border-amber-200/80">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center font-bold text-[13px] text-white">
-                    VS
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center font-bold text-[12px] text-white shrink-0">
+                    {currentUser?.fullName
+                      ? currentUser.fullName
+                          .split(" ")
+                          .map((w: string) => w[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()
+                      : "VS"}
                   </div>
-                  <div>
-                    <p className="text-[13.5px] font-bold text-slate-800 leading-tight">Vann Sitha</p>
-                    <p className="text-[11.5px] text-amber-800/80 font-semibold">{t.ownerRole}</p>
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-bold text-slate-800 leading-tight truncate">
+                      {currentUser?.fullName || "Vann Sitha"}
+                    </p>
+                    <p className="text-[11.5px] text-amber-800/80 font-semibold truncate">
+                      {currentUser?.role === "STAFF"
+                        ? (lang === "km" ? "បុគ្គលិកលក់" : "Sales Staff")
+                        : t.ownerRole}
+                    </p>
                   </div>
                 </div>
                 <button
                   onClick={handleLogout}
                   title={t.logout}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition shrink-0"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -2719,7 +2885,186 @@ export default function Dashboard() {
           {/* TAB 9: SETTINGS (ការកំណត់) */}
           {/* ========================================================= */}
           {activeNav === "settings" && (
+            currentUser?.role === "STAFF" ? (
+              <div className="bg-white p-8 rounded-2xl border border-amber-200/80 shadow-xs max-w-xl text-center space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200">
+                  <ShieldAlert className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800">
+                  {lang === "km" ? "ការកំណត់ត្រូវបានរក្សាសិទ្ធិសម្រាប់តែ Admin" : "Settings Restricted to Admin"}
+                </h3>
+                <p className="text-[15px] text-slate-600">
+                  {lang === "km"
+                    ? "គណនីរបស់អ្នកជាបុគ្គលិកលក់ ដូច្នេះមិនអាចចូលកែប្រែការកំណត់ប្រព័ន្ធបានឡើយ។"
+                    : "Your account is Sales Staff, and does not have permission to modify system settings."}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveNav("overview")}
+                  className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl shadow-xs text-[14px] cursor-pointer"
+                >
+                  {lang === "km" ? "ត្រឡប់ទៅទំព័រដើម" : "Return to Overview"}
+                </button>
+              </div>
+            ) : (
             <div className="space-y-6 max-w-4xl">
+              {/* Card 0: Staff & Team Management (គ្រប់គ្រងក្រុមការងារ & បុគ្គលិក) */}
+              <div className="bg-white p-6 sm:p-7 rounded-2xl border border-amber-200/80 shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-amber-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/10 to-amber-500/10 text-orange-600 flex items-center justify-center p-2.5 border border-orange-200/80 shrink-0">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <h3 className="text-[19px] font-bold text-slate-900 leading-snug">
+                          {t.teamManagementTitle}
+                        </h3>
+                        <span className="text-[12px] font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-300">
+                          {staffList.length + 1} {lang === "km" ? "គណនី" : "Accounts"}
+                        </span>
+                      </div>
+                      <p className="text-[14px] text-slate-500 font-normal mt-0.5">
+                        {t.teamManagementSub}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStaffError("");
+                      setStaffSuccess("");
+                      setShowAddStaffModal(true);
+                    }}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-[14px] shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>{t.addNewStaffBtn}</span>
+                  </button>
+                </div>
+
+                {staffSuccess && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[14px] rounded-xl flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{staffSuccess}</span>
+                  </div>
+                )}
+
+                {/* Team Members List */}
+                <div className="divide-y divide-amber-100/80 border border-amber-200/80 rounded-xl overflow-hidden bg-amber-50/20">
+                  {/* Master Owner / Admin Row */}
+                  <div className="p-4 flex items-center justify-between gap-4 bg-amber-50/60">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-bold text-[14px] shadow-xs shrink-0">
+                        VS
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-bold text-[15px] text-slate-800 truncate">
+                            Vann Sitha
+                          </p>
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            {lang === "km" ? "ម្ចាស់ប្រព័ន្ធ / Master Admin" : "Owner / Master Admin"}
+                          </span>
+                        </div>
+                        <p className="text-[12.5px] text-slate-500 mt-0.5">
+                          Username: <code className="font-mono text-orange-600 font-semibold">{currentUser?.username || "admin"}</code>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-300">
+                        {lang === "km" ? "✓ អចិន្ត្រៃយ៍" : "✓ Permanent"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Staff List */}
+                  {loadingStaff ? (
+                    <div className="p-6 text-center text-slate-500 text-[14px]">
+                      {lang === "km" ? "កំពុងទាញយកបញ្ជីបុគ្គលិក..." : "Loading staff..."}
+                    </div>
+                  ) : staffList.length === 0 ? (
+                    <div className="p-6 text-center text-slate-500 text-[14px]">
+                      {t.noStaffYet}
+                    </div>
+                  ) : (
+                    staffList.map((staff) => (
+                      <div
+                        key={staff.id}
+                        className="p-4 flex items-center justify-between gap-4 hover:bg-orange-50/30 transition bg-white"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white font-bold text-[13px] shadow-xs shrink-0">
+                            {staff.fullName
+                              .split(" ")
+                              .map((w: string) => w[0])
+                              .join("")
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-bold text-[15px] text-slate-800 truncate">
+                                {staff.fullName}
+                              </p>
+                              <span
+                                className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
+                                  staff.role === "ADMIN"
+                                    ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                    : "bg-blue-100 text-blue-800 border border-blue-200"
+                                }`}
+                              >
+                                {staff.role === "ADMIN"
+                                  ? t.staffRoleAdmin
+                                  : t.staffRoleSales}
+                              </span>
+                            </div>
+                            <p className="text-[12.5px] text-slate-500 mt-0.5">
+                              Username: <code className="font-mono text-slate-700 font-semibold">{staff.username}</code>
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStaffStatus(staff.id, staff.isActive)}
+                            className={`px-2.5 py-1 rounded-full text-[12px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                              staff.isActive
+                                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-300"
+                            }`}
+                          >
+                            {staff.isActive ? (
+                              <>
+                                <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>{t.staffActive}</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserX className="w-3.5 h-3.5 text-slate-500" />
+                                <span>{t.staffDisabled}</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteStaff(staff.id, staff.fullName)}
+                            title={t.delete}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
               {/* Card 1: Telegram CEO Assistant Bot */}
               <div className="bg-white p-7 rounded-2xl border border-amber-200/80 shadow-xs space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-100">
@@ -3074,6 +3419,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            )
           )}
         </main>
       </div>
@@ -3483,6 +3829,130 @@ export default function Dashboard() {
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold shadow-xs flex items-center gap-2 text-[15px] transition"
                 >
                   <Calendar className="w-4 h-4" /> {lang === "km" ? "រក្សាទុកកាលវិភាគ" : "Save Schedule"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 4: ADD NEW STAFF MEMBER */}
+      {/* ========================================================= */}
+      {showAddStaffModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4.5 border border-amber-200/80">
+            <div className="flex items-center justify-between border-b border-amber-100 pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-slate-900 text-[17px]">
+                  {t.addNewStaffBtn}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddStaffModal(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {staffError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-[13.5px] rounded-xl flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{staffError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCreateStaff} className="space-y-4 text-[14.5px] font-medium">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1 text-[13.5px]">
+                  {t.staffFullName} <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newStaffFullName}
+                  onChange={(e) => setNewStaffFullName(e.target.value)}
+                  placeholder={lang === "km" ? "ឧ. សុខ សាន" : "e.g. John Doe"}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-amber-200 bg-[#fffdfa] focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[14px]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1 text-[13.5px]">
+                  {t.staffUsername} <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newStaffUsername}
+                  onChange={(e) =>
+                    setNewStaffUsername(
+                      e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, "")
+                    )
+                  }
+                  placeholder={lang === "km" ? "ឧ. soksan" : "e.g. jdoe"}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-amber-200 bg-[#fffdfa] focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[14px] font-mono"
+                />
+                <p className="text-[12px] text-slate-400 mt-1">
+                  {lang === "km"
+                    ? "ប្រើអក្សរតូច លេខ និងសញ្ញា _ ឬ . (គ្មានដកឃ្លា)"
+                    : "Lowercase letters, numbers, and _ or . only"}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1 text-[13.5px]">
+                  {t.staffPassword} <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newStaffPassword}
+                  onChange={(e) => setNewStaffPassword(e.target.value)}
+                  placeholder={
+                    lang === "km"
+                      ? "កំណត់ពាក្យសម្ងាត់យ៉ាងតិច ៤ ខ្ទង់"
+                      : "At least 4 characters"
+                  }
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-amber-200 bg-[#fffdfa] focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[14px]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1 text-[13.5px]">
+                  {t.staffRole}
+                </label>
+                <select
+                  value={newStaffRole}
+                  onChange={(e) => setNewStaffRole(e.target.value as any)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-amber-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-[14px] cursor-pointer"
+                >
+                  <option value="STAFF">{t.staffRoleSales}</option>
+                  <option value="ADMIN">{t.staffRoleAdmin}</option>
+                </select>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-amber-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddStaffModal(false)}
+                  className="px-4 py-2 rounded-xl border border-amber-200 text-slate-700 hover:bg-orange-50/50 font-semibold text-[14px] transition cursor-pointer"
+                >
+                  {lang === "km" ? "បោះបង់" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingStaff}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-[14px] shadow-sm disabled:opacity-50 transition cursor-pointer"
+                >
+                  {submittingStaff
+                    ? (lang === "km" ? "កំពុងបង្កើត..." : "Creating...")
+                    : (lang === "km" ? "បង្កើតគណនី" : "Create Account")}
                 </button>
               </div>
             </form>
