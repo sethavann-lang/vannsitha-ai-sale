@@ -44,6 +44,7 @@ import {
   Kanban,
   BellRing,
   Edit,
+  LogOut,
 } from "lucide-react";
 
 // --- Data Types ---
@@ -555,6 +556,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleLogout = async () => {
+    if (confirm("តើបងពិតជាចង់ចាកចេញពីប្រព័ន្ធមែនទេ?")) {
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+      } finally {
+        window.location.href = "/login";
+      }
+    }
+  };
+
   useEffect(() => {
     fetchCustomers();
   }, [crmStageFilter, crmSearch]);
@@ -1008,17 +1019,28 @@ export default function Dashboard() {
               <span className="whitespace-nowrap">ផ្ទុកឡើងវិញ</span>
             </button>
 
-            {/* Studio User Avatar */}
-            <div
-              className="h-9 px-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center gap-2 shadow-2xs cursor-pointer hover:bg-amber-100/50 transition"
-              title="Vann Sitha / Admin"
-            >
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white font-extrabold text-[11px] flex items-center justify-center shadow-xs">
-                VS
+            {/* Studio User Avatar & Logout */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div
+                className="h-9 px-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center gap-2 shadow-2xs"
+                title="Vann Sitha / Owner"
+              >
+                <div className="w-6 h-6 rounded-lg bg-linear-to-br from-orange-500 to-amber-500 text-white font-extrabold text-[11px] flex items-center justify-center shadow-xs">
+                  VS
+                </div>
+                <span className="text-[13px] font-bold text-slate-700 hidden sm:inline whitespace-nowrap">
+                  Vann Sitha
+                </span>
               </div>
-              <span className="text-[13px] font-bold text-slate-700 hidden sm:inline whitespace-nowrap">
-                Vann Sitha
-              </span>
+
+              <button
+                onClick={handleLogout}
+                className="h-9 px-2.5 sm:px-3 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 text-[13px] font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-98"
+                title="ចាកចេញពីប្រព័ន្ធ (Logout)"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                <span className="hidden md:inline">ចាកចេញ</span>
+              </button>
             </div>
           </div>
         </header>
