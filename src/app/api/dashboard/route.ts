@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const pageId = process.env.FB_PAGE_ID || "";
     const pageConfig = await db.pageConfig.findFirst({
@@ -16,6 +16,27 @@ export async function GET() {
     const totalConversations = await db.conversation.count();
     const totalMessages = await db.message.count();
     const totalKnowledge = pageConfig?.knowledgeItems.length || 0;
+
+    // Detect Host & Protocol dynamically for permanent/production Webhook URL
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+    const proto = req.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+
+    const customDomain = "vannsitha.com";
+    const customDomainWebhookUrl = `https://${customDomain}/api/webhook`;
+    const vercelWebhookUrl = "https://vannsitha-ai-sale.vercel.app/api/webhook";
+
+    // Primary webhook URL:
+    // If NEXT_PUBLIC_APP_URL or APP_URL is specified, use it.
+    // If accessed through custom domain or Vercel, reflect that URL dynamically.
+    // Otherwise fallback to custom domain production URL.
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
+    if (!baseUrl && host) {
+      baseUrl = `${proto}://${host}`;
+    }
+    if (!baseUrl) {
+      baseUrl = `https://${customDomain}`;
+    }
+    const currentWebhookUrl = `${baseUrl.replace(/\/$/, "")}/api/webhook`;
 
     // Fetch recent conversations with their messages for Overview table
     const recentConversations = await db.conversation.findMany({
@@ -52,7 +73,7 @@ export async function GET() {
         totalKnowledge,
         aiProvider: process.env.AI_PROVIDER || "gemini",
         aiModel: "gemini-3.5-flash-lite",
-        tunnelUrl: "https://capitol-inclusive-browsing-paragraph.trycloudflare.com",
+        tunnelUrl: currentWebhookUrl.replace(/\/api\/webhook$/, ""),
       },
       health: {
         facebook: {
@@ -62,7 +83,9 @@ export async function GET() {
         },
         webhook: {
           active: true,
-          url: "https://capitol-inclusive-browsing-paragraph.trycloudflare.com/api/webhook",
+          url: currentWebhookUrl,
+          customDomainUrl: customDomainWebhookUrl,
+          vercelUrl: vercelWebhookUrl,
         },
         ai: {
           online: true,

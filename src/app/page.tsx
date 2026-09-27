@@ -86,7 +86,12 @@ interface PageConfig {
 
 interface HealthStatus {
   facebook: { connected: boolean; name: string; id: string };
-  webhook: { active: boolean; url: string };
+  webhook: {
+    active: boolean;
+    url: string;
+    customDomainUrl?: string;
+    vercelUrl?: string;
+  };
   ai: { online: boolean; provider: string; model: string; latency: string };
   database: { connected: boolean; type: string };
   token: { type: string; status: string; valid: boolean };
@@ -2538,20 +2543,52 @@ export default function Dashboard() {
                       <span className="text-slate-500">Page ID:</span>
                       <span className="font-mono text-slate-700">955747057621489</span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-                      <span className="text-slate-500">Webhook URL:</span>
+                    {/* Primary Custom Domain Webhook URL */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-1 border-t border-amber-200/50">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-600 font-semibold">Webhook URL (Domain ផ្ទាល់ខ្លួន):</span>
+                        <span className="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
+                          អចិន្ត្រៃយ៍
+                        </span>
+                      </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-orange-600 font-semibold text-[13.5px] break-all bg-white px-2 py-0.5 rounded border border-amber-200">
-                          {health?.webhook.url || "https://capitol-inclusive-browsing-paragraph.trycloudflare.com/api/webhook"}
+                        <span className="font-mono text-emerald-700 font-bold text-[13px] break-all bg-white px-2 py-0.5 rounded border border-emerald-200 shadow-2xs">
+                          {health?.webhook.customDomainUrl || "https://vannsitha.com/api/webhook"}
                         </span>
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText(
-                              health?.webhook.url || "https://capitol-inclusive-browsing-paragraph.trycloudflare.com/api/webhook"
+                              health?.webhook.customDomainUrl || "https://vannsitha.com/api/webhook"
                             );
-                            alert("បានចម្លង Webhook URL រួចរាល់!");
+                            alert("បានចម្លង Custom Domain Webhook URL រួចរាល់!");
                           }}
-                          className="px-2 py-0.5 bg-orange-100 hover:bg-orange-200 text-orange-700 text-[12px] font-bold rounded transition shadow-2xs shrink-0"
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-bold rounded transition shadow-2xs shrink-0"
+                        >
+                          ចម្លង
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Vercel Direct Webhook URL */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-500">Webhook URL (Vercel Direct):</span>
+                        <span className="text-[11px] bg-slate-100 text-slate-700 font-medium px-1.5 py-0.5 rounded">
+                          ដំណើរការ ២៤/៧
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-slate-700 font-semibold text-[13px] break-all bg-white px-2 py-0.5 rounded border border-slate-200">
+                          {health?.webhook.vercelUrl || "https://vannsitha-ai-sale.vercel.app/api/webhook"}
+                        </span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              health?.webhook.vercelUrl || "https://vannsitha-ai-sale.vercel.app/api/webhook"
+                            );
+                            alert("បានចម្លង Vercel Webhook URL រួចរាល់!");
+                          }}
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[12px] font-bold rounded transition shadow-2xs shrink-0"
                         >
                           ចម្លង
                         </button>
