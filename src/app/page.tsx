@@ -49,6 +49,7 @@ import {
   Mic,
   Volume2,
   Image as ImageIcon,
+  Menu,
 } from "lucide-react";
 import { translations, Language } from "@/lib/i18n";
 
@@ -239,6 +240,7 @@ export default function Dashboard() {
   >("overview");
 
   const [lang, setLang] = useState<Language>("km");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -875,9 +877,9 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#fef9f2] flex text-slate-800 antialiased font-normal">
       {/* ========================================================= */}
-      {/* 1. LEFT SIDEBAR (VANN SITHA STUDIO Style) */}
+      {/* 1. LEFT SIDEBAR (Desktop: Fixed Sticky; Mobile: Hidden) */}
       {/* ========================================================= */}
-      <aside className="w-68 bg-white border-r border-amber-200/80 text-slate-800 flex flex-col shrink-0 sticky top-0 h-screen z-40 shadow-xs select-none">
+      <aside className="hidden md:flex w-68 bg-white border-r border-amber-200/80 text-slate-800 flex-col shrink-0 sticky top-0 h-screen z-40 shadow-xs select-none">
         {/* Brand Header */}
         <div className="p-5 flex items-center gap-3.5 border-b border-amber-200/80">
           <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-sm shadow-orange-500/20 font-bold text-xl">
@@ -921,7 +923,7 @@ export default function Dashboard() {
               <button
                 key={item.id}
                 onClick={() => setActiveNav(item.id as any)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-[16px] font-semibold tracking-wide ${
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-[16px] font-semibold tracking-wide cursor-pointer ${
                   active
                     ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/25 font-bold"
                     : "text-slate-700 hover:text-orange-600 hover:bg-orange-50/70"
@@ -953,7 +955,7 @@ export default function Dashboard() {
         <div className="p-3.5 border-t border-amber-200/80 space-y-2.5">
           <button
             onClick={() => setActiveNav("settings")}
-            className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition text-[16px] font-semibold ${
+            className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition text-[16px] font-semibold cursor-pointer ${
               activeNav === "settings"
                 ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/25 font-bold"
                 : "text-slate-700 hover:text-orange-600 hover:bg-orange-50/70"
@@ -979,14 +981,160 @@ export default function Dashboard() {
       </aside>
 
       {/* ========================================================= */}
+      {/* MOBILE DRAWER (Slide-out menu for Phones & Tablets) */}
+      {/* ========================================================= */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          {/* Drawer menu panel */}
+          <div className="relative w-4/5 max-w-xs bg-white text-slate-800 flex flex-col h-full shadow-2xl z-10 border-r border-amber-200/80 select-none">
+            {/* Header */}
+            <div className="p-4 flex items-center justify-between border-b border-amber-200/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-sm font-bold text-lg">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="font-extrabold text-[17px] leading-tight text-[#c2410c]">
+                      VANN SITHA
+                    </h1>
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-600 border border-orange-200">
+                      PRO
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-amber-900/70 font-semibold">
+                    AI Sales Studio
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 rounded-xl border border-amber-200 text-slate-500 hover:text-slate-800 hover:bg-orange-50 transition"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Navigation links */}
+            <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+              {[
+                { id: "overview", label: t.navOverview, icon: Layers },
+                { id: "customers", label: t.navCustomers, icon: Users },
+                { id: "pipeline", label: t.navPipeline, icon: Kanban },
+                {
+                  id: "followups",
+                  label: t.navFollowups,
+                  icon: BellRing,
+                  badge: followUpMetrics.overdueCount > 0 ? followUpMetrics.overdueCount : null,
+                },
+                { id: "conversations", label: t.navInbox, icon: MessageSquare },
+                { id: "knowledge", label: t.navKnowledge, icon: BookOpen },
+                { id: "automation", label: t.navAutomation, icon: Sliders },
+                { id: "ads", label: t.navAds, icon: Megaphone, tag: t.comingSoon },
+              ].map((item) => {
+                const active = activeNav === item.id;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveNav(item.id as any);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all text-[15px] font-semibold ${
+                      active
+                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs font-bold"
+                        : "text-slate-700 hover:text-orange-600 hover:bg-orange-50/70"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4.5 h-4.5 shrink-0 ${active ? "text-white" : "text-amber-700"}`} />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge ? (
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[12px] font-bold ${
+                          active ? "bg-white text-orange-600" : "bg-orange-100 text-orange-700"
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    ) : item.tag ? (
+                      <span className="px-2 py-0.5 rounded-md text-[11px] bg-amber-100/80 text-amber-800 font-medium">
+                        {item.tag}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Bottom Settings & User */}
+            <div className="p-3 border-t border-amber-200/80 space-y-2">
+              <button
+                onClick={() => {
+                  setActiveNav("settings");
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-[15px] font-semibold ${
+                  activeNav === "settings"
+                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs font-bold"
+                    : "text-slate-700 hover:text-orange-600 hover:bg-orange-50/70"
+                }`}
+              >
+                <SettingsIcon className={`w-4.5 h-4.5 ${activeNav === "settings" ? "text-white" : "text-amber-700"}`} />
+                <span>{t.navSettings}</span>
+              </button>
+
+              <div className="flex items-center justify-between p-2 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center font-bold text-[13px] text-white">
+                    VS
+                  </div>
+                  <div>
+                    <p className="text-[13.5px] font-bold text-slate-800 leading-tight">Vann Sitha</p>
+                    <p className="text-[11.5px] text-amber-800/80 font-semibold">{t.ownerRole}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  title={t.logout}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
       {/* 2. RIGHT MAIN CONTENT COLUMN */}
       {/* ========================================================= */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Sticky Top Header Bar (Studio Modern Minimalist Header) */}
-        <header className="bg-white/90 backdrop-blur-md border-b border-amber-200/70 px-6 sm:px-8 py-3.5 sticky top-0 z-30 flex items-center justify-between shadow-2xs min-h-[64px]">
-          {/* Left: Dynamic Module Title & Status Tag */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            <h2 className="text-[20px] sm:text-[22px] font-bold text-slate-900 tracking-tight whitespace-nowrap">
+        {/* Sticky Top Header Bar (Responsive: Compact on phone, Studio on desktop) */}
+        <header className="bg-white/95 backdrop-blur-md border-b border-amber-200/70 px-3 sm:px-8 py-2.5 sm:py-3.5 sticky top-0 z-30 flex items-center justify-between shadow-2xs min-h-[56px] sm:min-h-[64px]">
+          {/* Left: Hamburger Menu (Mobile) + Dynamic Module Title */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Mobile Hamburger Toggle */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-2 rounded-xl border border-amber-200/90 text-slate-700 hover:text-orange-600 hover:bg-orange-50/80 transition active:scale-95"
+              aria-label="Open mobile navigation menu"
+            >
+              <Menu className="w-5 h-5 text-orange-600" />
+            </button>
+
+            <h2 className="text-[17px] sm:text-[22px] font-bold text-slate-900 tracking-tight whitespace-nowrap">
               {activeNav === "overview" && t.navOverview}
               {activeNav === "customers" && t.navCustomers}
               {activeNav === "pipeline" && t.navPipeline}
@@ -997,13 +1145,13 @@ export default function Dashboard() {
               {activeNav === "ads" && (lang === "km" ? "ការផ្សាយពាណិជ្ជកម្ម (Meta Ads Manager)" : "Meta Ads Manager")}
               {activeNav === "settings" && t.navSettings}
             </h2>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200/80">
+            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200/80">
               PRO STUDIO
             </span>
           </div>
 
           {/* Right: Unified Status Capsule, Quick Refresh & Profile */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Unified Studio Status Capsule (All-in-One, Never wraps) */}
             <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-amber-50/70 border border-amber-200/80 shadow-2xs text-[13px] font-medium whitespace-nowrap">
               {/* Live Dot & Facebook */}
@@ -1075,7 +1223,7 @@ export default function Dashboard() {
             <button
               onClick={handleRefreshAll}
               disabled={refreshingAll}
-              className="flex items-center gap-2 h-9 px-3.5 py-1.5 rounded-xl border border-amber-200/90 bg-white hover:bg-orange-50/70 text-slate-700 text-[14px] font-semibold transition-all shadow-2xs hover:border-orange-300 disabled:opacity-50 whitespace-nowrap cursor-pointer active:scale-98"
+              className="flex items-center gap-1.5 sm:gap-2 h-9 px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-amber-200/90 bg-white hover:bg-orange-50/70 text-slate-700 text-[14px] font-semibold transition-all shadow-2xs hover:border-orange-300 disabled:opacity-50 whitespace-nowrap cursor-pointer active:scale-98"
               title={t.refresh}
             >
               <RefreshCw
@@ -1083,7 +1231,7 @@ export default function Dashboard() {
                   refreshingAll ? "animate-spin" : ""
                 }`}
               />
-              <span className="whitespace-nowrap">{t.refresh}</span>
+              <span className="hidden sm:inline whitespace-nowrap">{t.refresh}</span>
             </button>
 
             {/* Studio User Avatar & Logout */}
@@ -1092,7 +1240,7 @@ export default function Dashboard() {
                 className="h-9 px-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center gap-2 shadow-2xs"
                 title={t.ownerBadge}
               >
-                <div className="w-6 h-6 rounded-lg bg-linear-to-br from-orange-500 to-amber-500 text-white font-extrabold text-[11px] flex items-center justify-center shadow-xs">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white font-extrabold text-[11px] flex items-center justify-center shadow-xs">
                   VS
                 </div>
                 <span className="text-[13px] font-bold text-slate-700 hidden sm:inline whitespace-nowrap">
@@ -1121,7 +1269,7 @@ export default function Dashboard() {
         )}
 
         {/* Main View Body */}
-        <main className="p-7 flex-1 max-w-7xl w-full space-y-7">
+        <main className="p-3.5 sm:p-7 flex-1 max-w-7xl w-full space-y-5 sm:space-y-7 overflow-x-hidden">
           {/* ========================================================= */}
           {/* TAB 1: OVERVIEW (ទិដ្ឋភាពទូទៅ) */}
           {/* ========================================================= */}
@@ -2136,10 +2284,10 @@ export default function Dashboard() {
           {/* TAB 5: CONVERSATIONS (ការសន្ទនា LIVE CHAT) */}
           {/* ========================================================= */}
           {activeNav === "conversations" && (
-            <div className="bg-white rounded-2xl border border-amber-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row h-[760px]">
-              {/* Conversation List Sidebar */}
-              <div className="w-full md:w-84 border-r border-amber-200/80 flex flex-col bg-[#fffdfa]">
-                <div className="p-4.5 border-b border-amber-200/80 flex items-center justify-between bg-white">
+            <div className="bg-white rounded-2xl border border-amber-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row h-[calc(100vh-160px)] min-h-[580px] sm:h-[760px]">
+              {/* Conversation List Sidebar (Hidden on mobile when a chat is open) */}
+              <div className={`${selectedConvId ? "hidden md:flex" : "flex"} w-full md:w-84 border-r border-amber-200/80 flex-col bg-[#fffdfa] h-full`}>
+                <div className="p-3.5 sm:p-4.5 border-b border-amber-200/80 flex items-center justify-between bg-white">
                   <span className="font-bold text-[16px] text-slate-900">{t.inboxTitle}</span>
                   <button
                     onClick={fetchConversations}
@@ -2164,17 +2312,17 @@ export default function Dashboard() {
                         <button
                           key={c.id}
                           onClick={() => setSelectedConvId(c.id)}
-                          className={`w-full text-left p-4 transition flex flex-col gap-1.5 ${
+                          className={`w-full text-left p-3.5 sm:p-4 transition flex flex-col gap-1.5 cursor-pointer ${
                             isSelected
                               ? "bg-orange-50/80 border-l-4 border-orange-500 shadow-xs"
                               : "hover:bg-white"
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-semibold text-[15px] text-slate-900">
+                            <span className="font-semibold text-[15px] text-slate-900 truncate">
                               {c.customerName || `Customer #${c.psid.slice(-6)}`}
                             </span>
-                            <span className="text-[12.5px] text-slate-400">
+                            <span className="text-[12px] text-slate-400 shrink-0 ml-2">
                               {new Date(c.updatedAt).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -2182,17 +2330,17 @@ export default function Dashboard() {
                             </span>
                           </div>
 
-                          <p className="text-[14px] text-slate-600 line-clamp-1 font-normal">
+                          <p className="text-[13.5px] text-slate-600 line-clamp-1 font-normal">
                             {lastMsg ? `${lastMsg.sender}: ${lastMsg.text}` : (lang === "km" ? "គ្មានសារនៅឡើយទេ" : "No messages yet")}
                           </p>
 
                           <div className="flex items-center gap-2 mt-1">
                             {c.isAiPaused ? (
-                              <span className="inline-flex items-center gap-1 text-[12px] px-2 py-0.5 rounded-md font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                              <span className="inline-flex items-center gap-1 text-[11.5px] px-2 py-0.5 rounded-md font-semibold bg-amber-100 text-amber-800 border border-amber-200">
                                 <PauseCircle className="w-3 h-3" /> {lang === "km" ? "មនុស្សឆ្លើយ" : "Human"}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[12px] px-2 py-0.5 rounded-md font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              <span className="inline-flex items-center gap-1 text-[11.5px] px-2 py-0.5 rounded-md font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
                                 <PlayCircle className="w-3 h-3" /> {lang === "km" ? "AI កំពុងឆ្លើយ" : "AI Active"}
                               </span>
                             )}
@@ -2204,34 +2352,46 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Conversation Active Window */}
+              {/* Conversation Active Window (Shown full-screen on mobile when a chat is open) */}
               {selectedConversation ? (
-                <div className="flex-1 flex flex-col bg-white">
-                  {/* Chat Top Banner with Human Takeover Toggle */}
-                  <div className="p-4.5 border-b border-amber-200/80 flex items-center justify-between bg-white">
-                    <div>
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-bold text-[17px] text-slate-900">
-                          {selectedConversation.customerName ||
-                            `Customer #${selectedConversation.psid.slice(-6)}`}
-                        </span>
-                        <span className="text-[12px] px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-slate-600 font-mono">
-                          PSID: {selectedConversation.psid}
-                        </span>
+                <div className={`${!selectedConvId ? "hidden md:flex" : "flex"} flex-1 flex-col bg-white h-full`}>
+                  {/* Chat Top Banner with Back button on Mobile */}
+                  <div className="p-3 sm:p-4.5 border-b border-amber-200/80 flex items-center justify-between bg-white gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* Mobile Back Button */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedConvId(null)}
+                        className="md:hidden p-1.5 rounded-xl border border-amber-200 text-slate-600 hover:bg-orange-50 shrink-0"
+                        title={lang === "km" ? "ត្រឡប់ក្រោយ" : "Back"}
+                      >
+                        <ArrowLeft className="w-4.5 h-4.5 text-orange-600" />
+                      </button>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-[15px] sm:text-[17px] text-slate-900 truncate">
+                            {selectedConversation.customerName ||
+                              `Customer #${selectedConversation.psid.slice(-6)}`}
+                          </span>
+                          <span className="text-[11px] sm:text-[12px] px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-slate-600 font-mono truncate">
+                            PSID: {selectedConversation.psid}
+                          </span>
+                        </div>
+                        <p className="text-[12px] sm:text-[13.5px] text-slate-500 mt-0.5 font-normal truncate">
+                          {lang === "km" ? "ចាប់ផ្តើមសន្ទនា: " : "Started: "}
+                          {new Date(selectedConversation.createdAt || selectedConversation.updatedAt).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-[13.5px] text-slate-500 mt-0.5 font-normal">
-                        {lang === "km" ? "ចាប់ផ្តើមសន្ទនា: " : "Started: "}
-                        {new Date(selectedConversation.createdAt || selectedConversation.updatedAt).toLocaleDateString()}
-                      </p>
                     </div>
 
-                    {/* Human Takeover Toggle Button: 15–16px, font-weight 600 */}
-                    <div className="flex items-center gap-2">
+                    {/* Human Takeover Toggle Button */}
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() =>
                           handleToggleAi(selectedConversation.id, selectedConversation.isAiPaused)
                         }
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[15px] font-semibold shadow-xs transition ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[13px] sm:text-[15px] font-semibold shadow-xs transition ${
                           selectedConversation.isAiPaused
                             ? "bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                             : "bg-[#ea580c] hover:bg-[#c2410c] text-white font-bold"
@@ -2239,16 +2399,17 @@ export default function Dashboard() {
                       >
                         {selectedConversation.isAiPaused ? (
                           <>
-                            <PlayCircle className="w-4.5 h-4.5" /> {lang === "km" ? "បន្ត AI ឡើងវិញ" : "Resume AI"}
+                            <PlayCircle className="w-4 h-4" /> <span className="hidden sm:inline">{lang === "km" ? "បន្ត AI ឡើងវិញ" : "Resume AI"}</span><span className="sm:hidden">{lang === "km" ? "បន្ត AI" : "Resume"}</span>
                           </>
                         ) : (
                           <>
-                            <PauseCircle className="w-4.5 h-4.5" /> {lang === "km" ? "ផ្អាក AI (មនុស្សឆ្លើយផ្ទាល់)" : "Pause AI (Human Takeover)"}
+                            <PauseCircle className="w-4 h-4" /> <span className="hidden sm:inline">{lang === "km" ? "ផ្អាក AI (មនុស្សឆ្លើយ)" : "Pause AI (Human)"}</span><span className="sm:hidden">{lang === "km" ? "ផ្អាក AI" : "Pause"}</span>
                           </>
                         )}
                       </button>
                     </div>
                   </div>
+
 
                   {/* Messages Timeline */}
                   <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-[#fef9f2]/70">
@@ -2298,7 +2459,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 flex items-center justify-center text-slate-400 text-[15px]">
+                <div className="hidden md:flex flex-1 items-center justify-center text-slate-400 text-[15px] p-8">
                   {lang === "km" ? "សូមជ្រើសរើសការសន្ទនាដើម្បីមើលសារ" : "Select a conversation to view messages"}
                 </div>
               )}
