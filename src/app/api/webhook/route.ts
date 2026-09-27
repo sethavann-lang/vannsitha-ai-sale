@@ -274,7 +274,7 @@ export async function POST(req: NextRequest) {
                     phone: detectedPhone,
                     source: "MESSENGER",
                     stage: "NEW_LEAD",
-                    commentText: text,
+                    commentText: msg.text,
                   }).catch((err) => console.warn("[Telegram] Inbox alert error:", err));
                 });
               } else {
