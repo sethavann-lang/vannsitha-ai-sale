@@ -53,6 +53,8 @@ model PageConfig {
   autoReplyComment    Boolean         @default(true)
   privateReplyComment Boolean         @default(true)
   autoReplyInbox      Boolean         @default(true)
+  welcomeAudioUrl     String?         // URL of welcome voice note (.mp3/.m4a)
+  welcomeAudioEnabled Boolean         @default(false)
   knowledgeItems      KnowledgeItem[]
   conversations       Conversation[]
   customers           Customer[]
@@ -68,6 +70,8 @@ model KnowledgeItem {
   title        String      // e.g. "អាវយឺតដៃខ្លី Cotton"
   category     String?     // e.g. "Product", "Promotion", "Shipping", "FAQ"
   content      String      // Details, price, colors, sizes, shipping info
+  imageUrl     String?     // URL of poster or product photo
+  audioUrl     String?     // URL of audio or voice explanation (.mp3/.m4a)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 }

@@ -113,7 +113,15 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, systemPrompt, autoReplyComment, privateReplyComment, autoReplyInbox } = body;
+    const {
+      id,
+      systemPrompt,
+      autoReplyComment,
+      privateReplyComment,
+      autoReplyInbox,
+      welcomeAudioUrl,
+      welcomeAudioEnabled,
+    } = body;
 
     if (!id) {
       return NextResponse.json({ error: "PageConfig id is required" }, { status: 400 });
@@ -122,10 +130,12 @@ export async function PUT(req: NextRequest) {
     const updated = await db.pageConfig.update({
       where: { id },
       data: {
-        systemPrompt,
-        autoReplyComment: Boolean(autoReplyComment),
-        privateReplyComment: Boolean(privateReplyComment),
-        autoReplyInbox: Boolean(autoReplyInbox),
+        ...(systemPrompt !== undefined ? { systemPrompt } : {}),
+        ...(autoReplyComment !== undefined ? { autoReplyComment: Boolean(autoReplyComment) } : {}),
+        ...(privateReplyComment !== undefined ? { privateReplyComment: Boolean(privateReplyComment) } : {}),
+        ...(autoReplyInbox !== undefined ? { autoReplyInbox: Boolean(autoReplyInbox) } : {}),
+        ...(welcomeAudioUrl !== undefined ? { welcomeAudioUrl: welcomeAudioUrl ? String(welcomeAudioUrl).trim() : null } : {}),
+        ...(welcomeAudioEnabled !== undefined ? { welcomeAudioEnabled: Boolean(welcomeAudioEnabled) } : {}),
       },
     });
 

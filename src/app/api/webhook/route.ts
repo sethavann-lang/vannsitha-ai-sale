@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { WebhookPayload } from "@/types/meta";
-import { replyToComment, sendPrivateReply, sendMessengerMessage } from "@/lib/meta/graph";
+import { replyToComment, sendPrivateReply, sendMessengerMessage, sendMessengerAttachment } from "@/lib/meta/graph";
 import { getAIProvider, ChatMessage } from "@/lib/ai";
 import { db } from "@/lib/db";
 
@@ -39,7 +39,12 @@ async function getPageConfigWithKnowledge(pageId: string) {
 
     if (config) {
       const knowledgeText = config.knowledgeItems
-        .map((k) => `[${k.category || "General"}] ${k.title}:\n${k.content}`)
+        .map((k) => {
+          let itemStr = `[${k.category || "General"}] ${k.title}:\n${k.content}`;
+          if (k.imageUrl) itemStr += `\n[IMAGE: ${k.imageUrl}]`;
+          if (k.audioUrl) itemStr += `\n[AUDIO: ${k.audioUrl}]`;
+          return itemStr;
+        })
         .join("\n\n");
       return { config, knowledgeText, token: config.pageAccessToken };
     }
@@ -316,6 +321,8 @@ export async function POST(req: NextRequest) {
               },
             });
 
+            const isNewConversation = !conv || conv.messages.length === 0;
+
             if (!conv && (config as any).id) {
               conv = await db.conversation.create({
                 data: {
@@ -342,6 +349,25 @@ export async function POST(req: NextRequest) {
                   role: m.sender === "USER" ? ("user" as const) : ("model" as const),
                   content: m.text,
                 }));
+            }
+
+            // Instant Welcome Voice Note (if enabled and this is customer's first contact)
+            if ((config as any).welcomeAudioEnabled && (config as any).welcomeAudioUrl && isNewConversation) {
+              try {
+                await sendMessengerAttachment(senderPsid, "audio", (config as any).welcomeAudioUrl, token);
+                console.log(`[Webhook] Sent Welcome Audio Note to ${senderPsid}`);
+                if (conversationId) {
+                  await db.message.create({
+                    data: {
+                      conversationId,
+                      sender: "AI",
+                      text: `[សារសំឡេងស្វាគមន៍ Welcome Voice]: ${(config as any).welcomeAudioUrl}`,
+                    },
+                  });
+                }
+              } catch (audioErr) {
+                console.error("[Webhook] Failed to send welcome audio note:", audioErr);
+              }
             }
           } catch (err) {
             console.warn("[DB] Could not load conversation history or sync customer:", err);
@@ -376,17 +402,75 @@ export async function POST(req: NextRequest) {
               contextType: "inbox",
             });
 
-            // Send message back to user in Messenger
-            await sendMessengerMessage(senderPsid, aiReply, token);
-            console.log(`[Webhook] Sent Messenger reply: "${aiReply}"`);
+            // Parse Attachment Tags
+            const imageTagMatch = aiReply.match(/\[ATTACH_IMAGE:\s*(https?:\/\/[^\s\]]+)\]/i);
+            const audioTagMatch = aiReply.match(/\[ATTACH_AUDIO:\s*(https?:\/\/[^\s\]]+)\]/i);
+
+            let imageUrlToSend = imageTagMatch ? imageTagMatch[1] : null;
+            let audioUrlToSend = audioTagMatch ? audioTagMatch[1] : null;
+
+            // Clean tags from user text
+            let cleanReply = aiReply
+              .replace(/\[ATTACH_IMAGE:\s*(https?:\/\/[^\s\]]+)\]/gi, "")
+              .replace(/\[ATTACH_AUDIO:\s*(https?:\/\/[^\s\]]+)\]/gi, "")
+              .trim();
+
+            // Fallback: If no image tag was output, check if user asked for poster/image and knowledge item has image
+            if (!imageUrlToSend && (config as any).knowledgeItems) {
+              const lowerMsg = msg.text.toLowerCase();
+              if (lowerMsg.includes("រូប") || lowerMsg.includes("poster") || lowerMsg.includes("មើល") || lowerMsg.includes("អត្ថប្រយោជន៍")) {
+                for (const item of (config as any).knowledgeItems) {
+                  if (item.imageUrl) {
+                    imageUrlToSend = item.imageUrl;
+                    break;
+                  }
+                }
+              }
+            }
+
+            // 1. Send clean text message back to user in Messenger
+            if (cleanReply) {
+              await sendMessengerMessage(senderPsid, cleanReply, token);
+              console.log(`[Webhook] Sent Messenger reply: "${cleanReply}"`);
+            }
+
+            // 2. Send Image attachment if present
+            if (imageUrlToSend) {
+              try {
+                await sendMessengerAttachment(senderPsid, "image", imageUrlToSend, token);
+                console.log(`[Webhook] Sent Image attachment: ${imageUrlToSend}`);
+              } catch (imgErr) {
+                console.error("[Webhook] Failed to send image attachment:", imgErr);
+              }
+            }
+
+            // 3. Send Audio attachment if present
+            if (audioUrlToSend) {
+              try {
+                await sendMessengerAttachment(senderPsid, "audio", audioUrlToSend, token);
+                console.log(`[Webhook] Sent Audio attachment: ${audioUrlToSend}`);
+              } catch (audErr) {
+                console.error("[Webhook] Failed to send audio attachment:", audErr);
+              }
+            }
 
             // Save conversation to DB
             if (conversationId) {
+              const messagesToCreate = [
+                { conversationId, sender: "USER", text: msg.text },
+              ];
+              if (cleanReply) {
+                messagesToCreate.push({ conversationId, sender: "AI", text: cleanReply });
+              }
+              if (imageUrlToSend) {
+                messagesToCreate.push({ conversationId, sender: "AI", text: `[Poster រូបភាព]: ${imageUrlToSend}` });
+              }
+              if (audioUrlToSend) {
+                messagesToCreate.push({ conversationId, sender: "AI", text: `[Voice Note សំឡេង]: ${audioUrlToSend}` });
+              }
+
               await db.message.createMany({
-                data: [
-                  { conversationId, sender: "USER", text: msg.text },
-                  { conversationId, sender: "AI", text: aiReply },
-                ],
+                data: messagesToCreate,
               });
             }
           } catch (err) {

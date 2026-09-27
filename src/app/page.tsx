@@ -46,6 +46,9 @@ import {
   Edit,
   LogOut,
   Globe,
+  Mic,
+  Volume2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { translations, Language } from "@/lib/i18n";
 
@@ -56,6 +59,8 @@ interface KnowledgeItem {
   title: string;
   category: string | null;
   content: string;
+  imageUrl?: string | null;
+  audioUrl?: string | null;
   createdAt: string;
 }
 
@@ -84,6 +89,8 @@ interface PageConfig {
   autoReplyComment: boolean;
   privateReplyComment: boolean;
   autoReplyInbox: boolean;
+  welcomeAudioUrl?: string | null;
+  welcomeAudioEnabled?: boolean;
   knowledgeItems: KnowledgeItem[];
 }
 
@@ -267,6 +274,8 @@ export default function Dashboard() {
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState("Product");
   const [newContent, setNewContent] = useState("");
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newAudioUrl, setNewAudioUrl] = useState("");
   const [addingKnowledge, setAddingKnowledge] = useState(false);
 
   // Conversations state
@@ -607,6 +616,8 @@ export default function Dashboard() {
         autoReplyComment: pageConfig.autoReplyComment,
         privateReplyComment: pageConfig.privateReplyComment,
         autoReplyInbox: pageConfig.autoReplyInbox,
+        welcomeAudioUrl: pageConfig.welcomeAudioUrl,
+        welcomeAudioEnabled: pageConfig.welcomeAudioEnabled,
         ...overrides,
       };
 
@@ -656,7 +667,7 @@ export default function Dashboard() {
 
     try {
       setAddingKnowledge(true);
-      const res = await fetch("/api/knowledge", {
+      const res = await fetch("/api/dashboard/knowledge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -664,6 +675,8 @@ export default function Dashboard() {
           title: newTitle,
           category: newCategory,
           content: newContent,
+          imageUrl: newImageUrl,
+          audioUrl: newAudioUrl,
         }),
       });
 
@@ -675,6 +688,8 @@ export default function Dashboard() {
         });
         setNewTitle("");
         setNewContent("");
+        setNewImageUrl("");
+        setNewAudioUrl("");
         setStats((prev) => ({ ...prev, totalKnowledge: prev.totalKnowledge + 1 }));
       }
     } catch (e) {
@@ -2342,6 +2357,45 @@ export default function Dashboard() {
                     />
                   </div>
 
+                  <div>
+                    <label className="text-[14.5px] font-semibold text-slate-700 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <ImageIcon className="w-4 h-4 text-orange-600" />
+                        {lang === "km" ? "រូបភាព Poster / ទំនិញ (Image URL)" : "Poster / Product Image URL"}
+                      </span>
+                      <span className="text-[12px] font-normal text-slate-400">{lang === "km" ? "(ស្រេចចិត្ត)" : "(Optional)"}</span>
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://.../poster-kidneypro.jpg"
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      className="w-full mt-1.5 text-[14px] font-mono border border-amber-200 rounded-xl p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    />
+                    <p className="text-[12px] text-slate-500 mt-1">
+                      {lang === "km"
+                        ? "💡 AI នឹងផ្ញើរូបភាព Poster នេះក្នុង Messenger ពេលភ្ញៀវសួរពីអត្ថប្រយោជន៍ ឬសុំមើលរូបភាព។"
+                        : "💡 AI will send this poster in Messenger when customers ask for benefits or photos."}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-[14.5px] font-semibold text-slate-700 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Mic className="w-4 h-4 text-orange-600" />
+                        {lang === "km" ? "សំឡេងពន្យល់ (Voice Note URL - MP3/M4A)" : "Audio Explanation URL (.mp3/.m4a)"}
+                      </span>
+                      <span className="text-[12px] font-normal text-slate-400">{lang === "km" ? "(ស្រេចចិត្ត)" : "(Optional)"}</span>
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://.../explanation-kidneypro.mp3"
+                      value={newAudioUrl}
+                      onChange={(e) => setNewAudioUrl(e.target.value)}
+                      className="w-full mt-1.5 text-[14px] font-mono border border-amber-200 rounded-xl p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    />
+                  </div>
+
                   <button
                     type="submit"
                     disabled={addingKnowledge || !newTitle || !newContent}
@@ -2371,16 +2425,56 @@ export default function Dashboard() {
                         key={item.id}
                         className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-xs flex items-start justify-between gap-4"
                       >
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2.5">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-2.5 flex-wrap">
                             <span className="text-[12px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-orange-50 text-orange-700 border border-orange-200">
                               {item.category || "General"}
                             </span>
                             <h4 className="font-bold text-[16px] text-slate-900">{item.title}</h4>
+                            {item.imageUrl && (
+                              <span className="text-[11.5px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                <ImageIcon className="w-3 h-3" />
+                                {lang === "km" ? "មានរូប Poster" : "Has Poster"}
+                              </span>
+                            )}
+                            {item.audioUrl && (
+                              <span className="text-[11.5px] font-bold px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-1">
+                                <Mic className="w-3 h-3" />
+                                {lang === "km" ? "មានសំឡេង" : "Has Audio"}
+                              </span>
+                            )}
                           </div>
                           <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-wrap font-medium">
                             {item.content}
                           </p>
+
+                          {/* Image Preview */}
+                          {item.imageUrl && (
+                            <div className="pt-1.5 flex items-center gap-3">
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title}
+                                className="w-14 h-14 object-cover rounded-lg border border-amber-200 shadow-2xs"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLElement).style.display = "none";
+                                }}
+                              />
+                              <div className="text-[12px] text-slate-500 font-mono truncate max-w-sm">
+                                📷 {item.imageUrl}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Audio Player Preview */}
+                          {item.audioUrl && (
+                            <div className="pt-1.5">
+                              <div className="text-[12px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                                <Volume2 className="w-3.5 h-3.5 text-sky-600" />
+                                {lang === "km" ? "សំឡេងពន្យល់:" : "Audio Note:"}
+                              </div>
+                              <audio src={item.audioUrl} controls className="h-8 w-full max-w-xs" />
+                            </div>
+                          )}
                         </div>
 
                         <button
@@ -2627,7 +2721,107 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Card 2: Meta Facebook & Webhook Settings */}
+              {/* Card 2: Welcome Voice Note Settings */}
+              <div className="bg-white p-7 rounded-2xl border border-amber-200/80 shadow-xs space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center p-2.5 border border-amber-200/80 shrink-0">
+                      <Mic className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <h3 className="text-[19px] font-bold text-slate-900 leading-snug">
+                          {lang === "km" ? "សារសំឡេងស្វាគមន៍ (Welcome Voice Note)" : "Welcome Voice Note (Audio)"}
+                        </h3>
+                        <span
+                          className={`text-[12px] font-bold px-2.5 py-0.5 rounded-full ${
+                            pageConfig?.welcomeAudioEnabled
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {pageConfig?.welcomeAudioEnabled
+                            ? (lang === "km" ? "✓ កំពុងដំណើរការ" : "✓ Active")
+                            : (lang === "km" ? "បិទ" : "Disabled")}
+                        </span>
+                      </div>
+                      <p className="text-[14px] text-slate-500 font-normal mt-0.5">
+                        {lang === "km"
+                          ? "ផ្ញើសារជាសំឡេង Voice Chat ដែលបានថតទុកស្រាប់ ទៅកាន់អតិថិជនភ្លាមៗពេលគាត់ផ្ញើសារចូល Inbox លើកដំបូង (ដូច ManyChat / ChatKH)"
+                          : "Instantly send a pre-recorded audio voice message to customers when they first message your inbox"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Toggle Switch */}
+                  <div className="flex items-center gap-2 self-start sm:self-center">
+                    <span className="text-[13.5px] font-semibold text-slate-600">
+                      {pageConfig?.welcomeAudioEnabled ? (lang === "km" ? "បើក" : "ON") : (lang === "km" ? "បិទ" : "OFF")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!pageConfig) return;
+                        const nextVal = !pageConfig.welcomeAudioEnabled;
+                        setPageConfig({ ...pageConfig, welcomeAudioEnabled: nextVal });
+                        handleSaveConfig({ welcomeAudioEnabled: nextVal });
+                      }}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition duration-300 ease-in-out ${
+                        pageConfig?.welcomeAudioEnabled ? "bg-amber-600 justify-end" : "bg-slate-300 justify-start"
+                      }`}
+                    >
+                      <div className="bg-white w-4 h-4 rounded-full shadow-md transform transition"></div>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[14.5px] font-semibold text-slate-700 block mb-1.5">
+                      {lang === "km" ? "តំណភ្ជាប់ឯកសារសំឡេង (Audio URL - .mp3 ឬ .m4a):" : "Voice Note Audio URL (.mp3 or .m4a):"}
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="https://.../welcome-voice.mp3"
+                        value={pageConfig?.welcomeAudioUrl || ""}
+                        onChange={(e) => {
+                          if (pageConfig) setPageConfig({ ...pageConfig, welcomeAudioUrl: e.target.value });
+                        }}
+                        className="flex-1 px-3.5 py-2.5 border border-amber-200 rounded-xl text-[14px] font-mono bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      />
+                      <button
+                        onClick={() => handleSaveConfig()}
+                        disabled={savingConfig}
+                        className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[14.5px] font-bold rounded-xl transition shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        <Save className="w-4 h-4" />
+                        {savingConfig ? (lang === "km" ? "កំពុងរក្សាទុក..." : "Saving...") : (lang === "km" ? "រក្សាទុក" : "Save")}
+                      </button>
+                    </div>
+                    <p className="text-[12.5px] text-slate-500 mt-1.5">
+                      {lang === "km"
+                        ? "💡 ឯកសារសំឡេងត្រូវតែជា Direct Link (.mp3 ឬ .m4a) ដែលអាចបើកស្តាប់ជាសាធារណៈបាន។ Messenger នឹងបង្ហាញជា Waveform Voice Note ដោយស្វ័យប្រវត្តិ។"
+                        : "💡 Must be a publicly accessible direct audio URL (.mp3 or .m4a). Messenger will render it with a native voice note player."}
+                    </p>
+                  </div>
+
+                  {/* Live Audio Preview */}
+                  {pageConfig?.welcomeAudioUrl && (
+                    <div className="p-3.5 bg-amber-50/50 rounded-xl border border-amber-200/70 flex items-center gap-3">
+                      <Volume2 className="w-5 h-5 text-amber-700 shrink-0" />
+                      <div className="flex-1">
+                        <div className="text-[12.5px] font-bold text-amber-900 mb-1">
+                          {lang === "km" ? "ស្តាប់សាកល្បងសំឡេងស្វាគមន៍ (Voice Preview):" : "Listen to Voice Preview:"}
+                        </div>
+                        <audio controls src={pageConfig.welcomeAudioUrl} className="w-full h-8" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Card 3: Meta Facebook & Webhook Settings */}
               <div className="bg-white p-7 rounded-2xl border border-amber-200/80 shadow-xs space-y-5">
                 <h3 className="text-[19px] font-bold text-slate-900 border-b border-amber-100 pb-3">
                   {t.webhookConfig}

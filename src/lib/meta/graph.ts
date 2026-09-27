@@ -79,6 +79,42 @@ export async function sendMessengerMessage(
 }
 
 /**
+ * Send an attachment (image, audio, video, file) to a user in Messenger by PSID
+ */
+export async function sendMessengerAttachment(
+  recipientPsid: string,
+  type: "image" | "audio" | "video" | "file",
+  url: string,
+  pageAccessToken: string
+): Promise<{ recipient_id: string; message_id: string }> {
+  const endpoint = `${GRAPH_API_BASE}/me/messages?access_token=${encodeURIComponent(pageAccessToken)}`;
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      recipient: { id: recipientPsid },
+      message: {
+        attachment: {
+          type,
+          payload: {
+            url,
+            is_reusable: true,
+          },
+        },
+      },
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    console.error(`[Meta API] sendMessengerAttachment (${type}) error:`, data.error || data);
+    throw new Error(data.error?.message || `Failed to send messenger ${type}`);
+  }
+
+  return data;
+}
+
+/**
  * Subscribe the Page to the App's Webhooks
  */
 export async function subscribePageToWebhook(

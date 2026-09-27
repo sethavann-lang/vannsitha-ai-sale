@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
-    const { pageConfigId, title, category, content } = await req.json();
+    const { pageConfigId, title, category, content, imageUrl, audioUrl } = await req.json();
 
     if (!pageConfigId || !title || !content) {
       return NextResponse.json(
@@ -18,6 +18,8 @@ export async function POST(req: NextRequest) {
         title,
         category: category || "General",
         content,
+        imageUrl: imageUrl ? String(imageUrl).trim() : null,
+        audioUrl: audioUrl ? String(audioUrl).trim() : null,
       },
     });
 
