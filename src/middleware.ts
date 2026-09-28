@@ -4,9 +4,10 @@ import { verifySessionToken, COOKIE_NAME } from "@/lib/auth";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 1. Next.js static assets & root metadata files
+  // 1. Next.js static assets & root metadata files & public media
   if (
     pathname.startsWith("/_next/") ||
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp)$/) ||
     pathname === "/favicon.ico" ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml"
@@ -59,8 +60,8 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except _next/static and _next/image
+     * Match all request paths except _next/static, _next/image, and static files
      */
-    "/((?!_next/static|_next/image).*)",
+    "/((?!_next/static|_next/image|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp)$).*)",
   ],
 };
