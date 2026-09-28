@@ -58,8 +58,8 @@ export default function LoginPage() {
       <div className="max-w-md w-full relative z-10">
         {/* Brand Header */}
         <div className="text-center mb-8 space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 shadow-xl shadow-orange-500/25 text-white mb-2 ring-4 ring-amber-300/40">
-            <Sparkles className="w-8 h-8 text-white drop-shadow-xs" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white shadow-xl shadow-amber-900/10 mb-2 ring-4 ring-amber-400/30 p-1.5 overflow-hidden">
+            <img src="/logo.png" alt="VANN SITHA TRADING" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight flex items-center justify-center gap-2 flex-wrap">
             <span className="bg-gradient-to-r from-[#ea580c] via-[#f59e0b] to-[#eab308] bg-clip-text text-transparent drop-shadow-xs">

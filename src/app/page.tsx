@@ -1344,8 +1344,8 @@ export default function Dashboard() {
       <aside className="hidden md:flex w-68 bg-white border-r border-amber-200/80 text-slate-800 flex-col shrink-0 sticky top-0 h-screen z-40 shadow-xs select-none">
         {/* Brand Header */}
         <div className="p-5 flex items-center gap-3.5 border-b border-amber-200/80">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-sm shadow-orange-500/20 font-bold text-xl">
-            <Bot className="w-6 h-6 text-white" />
+          <div className="w-11 h-11 rounded-xl bg-white border border-amber-200/80 shadow-xs flex items-center justify-center p-1 overflow-hidden shrink-0">
+            <img src="/logo.png" alt="VANN SITHA" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
@@ -1471,8 +1471,8 @@ export default function Dashboard() {
             {/* Header */}
             <div className="p-4 flex items-center justify-between border-b border-amber-200/80">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-sm font-bold text-lg">
-                  <Bot className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-white border border-amber-200/80 shadow-xs flex items-center justify-center p-1 overflow-hidden shrink-0">
+                  <img src="/logo.png" alt="VANN SITHA" className="w-full h-full object-contain" />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">

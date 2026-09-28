@@ -4,6 +4,15 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "VANN SITHA - ប្រព័ន្ធ AI គ្រប់គ្រងការលក់",
   description: "ប្រព័ន្ធ AI ឆ្លាតវៃគ្រប់គ្រងការលក់ Facebook Comments, Messenger & CRM",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -14,6 +23,9 @@ export default function RootLayout({
   return (
     <html lang="km">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
