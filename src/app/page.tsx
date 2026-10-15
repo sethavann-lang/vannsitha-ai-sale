@@ -57,6 +57,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { translations, Language } from "@/lib/i18n";
+import { VoiceStudioLink } from "@/components/VoiceStudioLink";
 
 // --- Data Types ---
 
@@ -1376,10 +1377,16 @@ export default function Dashboard() {
             },
             { id: "conversations", label: t.navInbox, icon: MessageSquare },
             { id: "content", label: t.navContent, icon: Megaphone },
+            ...(currentUser?.role === "ADMIN"
+              ? [{ id: "voice", label: t.navVoiceStudio, icon: Mic }]
+              : []),
             { id: "knowledge", label: t.navKnowledge, icon: BookOpen },
             { id: "automation", label: t.navAutomation, icon: Sliders },
             { id: "ads", label: t.navAds, icon: Radio, tag: t.comingSoon },
           ].map((item) => {
+            if (item.id === "voice") {
+              return <VoiceStudioLink key={item.id} label={t.navVoiceStudio} newTabLabel={t.openVoiceStudioTab} />;
+            }
             const active = activeNav === item.id;
             const Icon = item.icon;
             return (
@@ -1512,10 +1519,16 @@ export default function Dashboard() {
                 },
                 { id: "conversations", label: t.navInbox, icon: MessageSquare },
                 { id: "content", label: t.navContent, icon: Megaphone },
+                ...(currentUser?.role === "ADMIN"
+                  ? [{ id: "voice", label: t.navVoiceStudio, icon: Mic }]
+                  : []),
                 { id: "knowledge", label: t.navKnowledge, icon: BookOpen },
                 { id: "automation", label: t.navAutomation, icon: Sliders },
                 { id: "ads", label: t.navAds, icon: Radio, tag: t.comingSoon },
               ].map((item) => {
+                if (item.id === "voice") {
+                  return <VoiceStudioLink key={item.id} label={t.navVoiceStudio} newTabLabel={t.openVoiceStudioTab} onClick={() => setMobileMenuOpen(false)} />;
+                }
                 const active = activeNav === item.id;
                 const Icon = item.icon;
                 return (
