@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  verification: { google: "TjzC9bFJJifPukut0j66OQLpREuUKz1HtLiR0G64n5o" },
   title: "VANN SITHA - ប្រព័ន្ធ AI គ្រប់គ្រងការលក់",
   description: "ប្រព័ន្ធ AI ឆ្លាតវៃគ្រប់គ្រងការលក់ Facebook Comments, Messenger & CRM",
   icons: {
