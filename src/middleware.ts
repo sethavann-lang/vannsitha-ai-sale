@@ -22,8 +22,13 @@ export async function middleware(req: NextRequest) {
     pathname === "/api/auth/me" ||
     pathname === "/api/webhook";
 
-  // 3. Strict Public Page Whitelist (Login + Meta App Review Privacy Policy)
-  const isPublicPage = pathname === "/login" || pathname === "/privacy";
+  // 3. Strict Public Page Whitelist (login and public application information)
+  const isPublicPage =
+    pathname === "/login" ||
+    pathname === "/privacy" ||
+    pathname === "/openclaw-sok-pisey" ||
+    pathname === "/openclaw-sok-pisey/privacy" ||
+    pathname === "/openclaw-sok-pisey/terms";
 
   // Check session
   const token = req.cookies.get(COOKIE_NAME)?.value;
