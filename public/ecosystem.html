@@ -285,6 +285,29 @@
       from { transform: rotate(-14deg) translate3d(-1%, 0, 0); }
       to { transform: rotate(-10deg) translate3d(2%, -2%, 0); }
     }
+    /* Large stars: a few bright twinkling dots plus four ✦ sparkles in the
+       VST neon colours, on a layer that drifts a little faster for depth. */
+    .cosmos-big { position:absolute; inset:-20px; animation: big-drift 32s ease-in-out infinite alternate; }
+    .bstar {
+      position:absolute; left:var(--x); top:var(--y); width:var(--s); height:var(--s); border-radius:50%;
+      background: radial-gradient(circle, #fff 0 35%, rgba(255,255,255,.45) 60%, transparent 72%);
+      box-shadow: 0 0 calc(var(--s) * 2.5) rgba(255,255,255,.55), 0 0 calc(var(--s) * 5) var(--c, rgba(180,160,255,.35));
+      animation: twinkle var(--t) ease-in-out var(--d) infinite;
+    }
+    .bstar.spark {
+      border-radius:0; box-shadow:none;
+      background: radial-gradient(circle, #fff 0 9%, var(--c) 16%, transparent 34%);
+      filter: drop-shadow(0 0 5px var(--c)) drop-shadow(0 0 14px var(--c));
+      animation-name: spark-twinkle;
+    }
+    .bstar.spark::before, .bstar.spark::after {
+      content:""; position:absolute; left:0; top:50%; width:100%; height:2px; margin-top:-1px; border-radius:2px;
+      background: linear-gradient(90deg, transparent, #fff 42%, #fff 58%, transparent);
+    }
+    .bstar.spark::after { transform: rotate(90deg); }
+    @keyframes twinkle { 0%,100% { opacity:.3; transform:scale(.7); } 50% { opacity:1; transform:scale(1.15); } }
+    @keyframes spark-twinkle { 0%,100% { opacity:.35; transform:scale(.6) rotate(0deg); } 50% { opacity:1; transform:scale(1.1) rotate(45deg); } }
+    @keyframes big-drift { from { transform: translate3d(-18px, 14px, 0); } to { transform: translate3d(22px, -18px, 0); } }
     .cosmos-paused .cosmos * { animation-play-state: paused; }
     @media (prefers-reduced-motion: reduce) {
       .cosmos * { animation: none !important; }
@@ -1257,21 +1280,262 @@
       .hero-copy h1 { font-size:28px; }
       .hero-copy h1 span { font-size:40px; }
     }
+
+    /* Hero title in the VST Downloader style: pill badge, heavy two-line title
+       with a gradient last word, Khmer subline and a quiet summary row. */
+    .vst-shell { grid-template-rows:minmax(280px,35dvh) auto 1fr; }
+    .hero-copy { display:flex; flex-direction:column; align-items:flex-start; gap:14px; }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:8px; padding:7px 14px 7px 12px; border-radius:999px;
+      font:700 11px/1 'Sora',sans-serif; letter-spacing:.16em; color:#E7DEFF;
+      background:linear-gradient(90deg,rgba(124,82,255,.26),rgba(124,82,255,.10));
+      border:1px solid rgba(160,128,255,.42); box-shadow:0 0 22px rgba(124,82,255,.18), inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .hero-badge i { font-style:normal; color:#FFB84A; font-size:12px; text-shadow:0 0 10px rgba(255,184,74,.7); }
+    .hero-copy h1.hero-title { display:flex; flex-direction:column; gap:2px; margin:0; font-family:'Sora',sans-serif; font-weight:800; line-height:1.04; color:#fff; letter-spacing:-.04em; font-size:inherit; }
+    .hero-copy h1.hero-title span { display:block; margin:0; background:none; -webkit-text-fill-color:currentColor; color:#fff; }
+    .hero-title .title-brand { font-size:clamp(30px,3.3vw,50px); text-shadow:0 2px 24px rgba(124,82,255,.35); }
+    .hero-title .title-main { font-size:clamp(46px,5vw,78px); letter-spacing:-.05em; }
+    .hero-title .title-main em {
+      font-style:normal; padding-right:.06em;
+      background:linear-gradient(95deg,#FFC23A 0%,#FF8A2B 45%,#FF4F8B 100%);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      filter:drop-shadow(0 6px 26px rgba(255,110,60,.35));
+    }
+    .hero-sub { margin:0; max-width:62ch; text-wrap:pretty; font:400 15px/1.7 'Kantumruy Pro',sans-serif; color:#CFC8EA; }
+    .hero-meta { list-style:none; display:flex; flex-wrap:wrap; gap:6px 20px; margin:0; padding:0; font:500 13px/1.4 'Kantumruy Pro',sans-serif; color:#A9A3C8; }
+    .hero-meta li { display:flex; align-items:center; gap:8px; }
+    .hero-meta i { width:7px; height:7px; border-radius:50%; background:var(--dot); box-shadow:0 0 10px var(--dot); }
+    @media(min-width:861px) and (max-height:820px) {
+      .vst-shell { grid-template-rows:minmax(230px,31dvh) auto 1fr; }
+      .hero-copy { gap:10px; }
+      .hero-meta { display:none; }
+      .hero-title .title-brand { font-size:clamp(26px,2.8vw,40px); }
+      .hero-title .title-main { font-size:clamp(38px,4.2vw,60px); }
+    }
+    @media(min-width:861px) and (max-height:700px) {
+      .vst-shell { grid-template-rows:minmax(170px,26dvh) auto 1fr; }
+      .hero-sub { display:none; }
+    }
+    @media(max-width:860px) {
+      .vst-shell { grid-template-rows:minmax(150px,22dvh) auto 1fr; }
+      .hero-copy { gap:7px; }
+      .hero-badge { font-size:8.5px; letter-spacing:.1em; padding:5px 10px 5px 9px; gap:6px; }
+      .hero-badge i { font-size:10px; }
+      .hero-title .title-brand { font-size:clamp(16px,4.6vw,24px); letter-spacing:-.03em; }
+      .hero-title .title-main { font-size:clamp(28px,8.4vw,42px); }
+      .hero-sub { font-size:11.5px; line-height:1.55; }
+      .hero-meta { display:none; }
+    }
+    @media(max-width:860px) and (max-height:670px) {
+      .vst-shell { grid-template-rows:minmax(120px,20dvh) auto 1fr; }
+      .hero-sub { display:none; }
+      .hero-title .title-main { font-size:clamp(24px,7vw,32px); }
+    }
+
+    /* Livelier title: airy wide-tracked brand line with a light sweep,
+       a softer "AI Ecosystem." whose gradient slowly flows, and a pulsing dot. */
+    .hero-title .title-brand {
+      font-weight:600; letter-spacing:.24em; font-size:clamp(17px,1.75vw,26px); line-height:1.2; margin-bottom:6px;
+      background:linear-gradient(100deg,#FFFFFF 0%,#FFFFFF 40%,#FFE2B0 48%,#FFFFFF 56%,#D9CCFF 100%) !important;
+      background-size:250% 100% !important;
+      -webkit-background-clip:text !important; background-clip:text !important; -webkit-text-fill-color:transparent !important;
+      text-shadow:none; filter:drop-shadow(0 0 18px rgba(150,110,255,.35));
+      animation:title-rise .9s cubic-bezier(.2,.8,.2,1) both, brand-sweep 7s ease-in-out 1.2s infinite;
+    }
+    .hero-title .title-main { font-weight:700; letter-spacing:-.035em; }
+    .title-main .title-ai { font-weight:700; color:#fff; text-shadow:0 0 28px rgba(255,255,255,.25); }
+    .hero-title .title-main em {
+      background:linear-gradient(95deg,#FFD23A 0%,#FF9A2B 25%,#FF5E7E 50%,#B98CFF 75%,#FFD23A 100%);
+      background-size:220% 100%;
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      background-position:0% 0;
+    }
+    .title-main em b { display:inline-block; -webkit-text-fill-color:#FF5E7E; color:#FF5E7E; }
+    .hero-sub { animation:title-rise .9s cubic-bezier(.2,.8,.2,1) .24s both; }
+    @keyframes title-rise { from { transform:translateY(14px); filter:blur(6px); } to { transform:none; filter:blur(0); } }
+    @keyframes brand-sweep { 0%,100% { background-position:100% 0; } 50% { background-position:0% 0; } }
+    @media(max-width:860px) {
+      .hero-title .title-brand { font-size:clamp(11px,3.1vw,15px); letter-spacing:.18em; margin-bottom:2px; }
+    }
+
+    /* Running light: a bright arc travelling around a border.
+       Used on the badge, the VST core, and on cards only while hovered. */
+    @property --run { syntax:'<angle>'; inherits:false; initial-value:0deg; }
+    @keyframes run-spin { to { --run:360deg; } }
+    .ring-light {
+      position:absolute; inset:0; border-radius:inherit; padding:1.5px; pointer-events:none; z-index:3;
+      background:conic-gradient(from var(--run), transparent 0deg 240deg, color-mix(in srgb,var(--ring) 40%,transparent) 290deg, var(--ring) 335deg, #fff 350deg, transparent 360deg);
+      -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+      mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+      filter:drop-shadow(0 0 4px var(--ring));
+      animation:run-spin var(--run-time,4s) linear infinite;
+    }
+    .hero-badge { position:relative; --ring:#C4AAFF; --run-time:5s; }
+    .orbit-core .ring-light { inset:-3px; border-radius:28px; padding:2px; --ring:#FFD27A; --run-time:6s; }
+    .app-card .ring-light { --ring:var(--card-neon-bright); --run-time:2.6s; opacity:0; transition:opacity .25s ease; animation-play-state:paused; }
+    .app-card:hover .ring-light, .app-card:focus-visible .ring-light { opacity:1; animation-play-state:running; }
+    /* ── Deeper shadows on every card and every line of text ── */
+    .app-card {
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.028) 0 1px, transparent 1px 3px),
+        radial-gradient(125% 105% at 0% 0%, rgba(var(--card-rgb), 0.20) 0%, rgba(var(--card-rgb), 0.04) 50%, transparent 100%),
+        linear-gradient(160deg, rgba(20, 26, 40, 0.95) 0%, rgba(8, 11, 18, 0.98) 100%);
+      box-shadow:
+        0 28px 52px -18px rgba(0,0,0,.95),
+        0 10px 22px -10px rgba(0,0,0,.8),
+        0 0 36px -8px rgba(var(--card-rgb), .40),
+        inset 0 1px 0 rgba(255,255,255,.14);
+    }
+    .app-card:hover, .app-card:focus-visible {
+      box-shadow:
+        0 38px 64px -18px rgba(0,0,0,.98),
+        0 14px 28px -12px rgba(0,0,0,.85),
+        0 0 52px -4px rgba(var(--card-rgb), .62),
+        inset 0 0 24px rgba(var(--card-rgb), .14);
+    }
+    .app-title { text-shadow: 0 3px 14px rgba(0,0,0,.9), 0 0 18px rgba(var(--card-rgb), .45); }
+    .app-desc { text-shadow: 0 2px 10px rgba(0,0,0,.95); }
+    .host-tag-text { text-shadow: 0 0 9px rgba(var(--card-rgb), .65), 0 2px 8px rgba(0,0,0,.9); }
+    .app-emblem { filter: drop-shadow(0 8px 14px rgba(0,0,0,.75)) drop-shadow(0 0 10px rgba(var(--card-rgb), .45)); }
+    .hero-sub, .hero-meta { text-shadow: 0 2px 12px rgba(0,0,0,.9); }
+    .hero-badge { text-shadow: 0 0 10px rgba(196,170,255,.6), 0 2px 8px rgba(0,0,0,.8); box-shadow: 0 10px 26px -10px rgba(0,0,0,.9), 0 0 24px rgba(124,82,255,.25), inset 0 1px 0 rgba(255,255,255,.08); }
+    .orbit-core { box-shadow: 0 22px 44px -12px rgba(0,0,0,.85), 0 0 48px rgba(255,107,0,.45), inset 0 1px 2px #fff7; }
+    .ai-logo-link { filter: drop-shadow(0 10px 18px rgba(0,0,0,.8)); }
+
+    /* ── VST Cyberpunk: neon palette, chromatic split, HUD chips, scanlines, glitch ── */
+    /* chromatic red/cyan edge on the headline, like a neon sign seen through a lens */
+    .hero-title .title-brand {
+      filter: drop-shadow(1.5px 0 0 rgba(255,36,76,.55)) drop-shadow(-1.5px 0 0 rgba(0,229,255,.45)) drop-shadow(0 6px 22px rgba(0,0,0,.8)) drop-shadow(0 0 20px rgba(150,110,255,.4));
+    }
+    .title-main .title-ai { text-shadow: 2px 0 0 rgba(255,36,76,.6), -2px 0 0 rgba(0,229,255,.5), 0 8px 30px rgba(0,0,0,.8), 0 0 28px rgba(255,255,255,.22); }
+    .hero-title .title-main em {
+      display:inline-block;
+      filter: drop-shadow(2px 0 0 rgba(255,36,76,.45)) drop-shadow(-2px 0 0 rgba(0,229,255,.35)) drop-shadow(0 8px 28px rgba(0,0,0,.75)) drop-shadow(0 0 22px rgba(255,110,60,.4));
+      background-position:0% 0;
+      animation:none;
+    }
+    /* HUD chips: cut corners on the card numbers, with a neon glow */
+    .card-index {
+      border-radius:0;
+      clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+      text-shadow: 0 0 10px rgba(var(--card-rgb), .85);
+      background: linear-gradient(135deg, rgba(var(--card-rgb), .22), rgba(var(--card-rgb), .08));
+    }
+    /* faint CRT scanlines over the whole background */
+    .cyber-scan {
+      position:fixed; inset:0; pointer-events:none;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 4px);
+      mix-blend-mode: overlay;
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      .hero-title .title-main em { animation:none !important; }
+    }
+    @media(prefers-reduced-motion:reduce) {
+      .ring-light, .hero-title .title-brand, .hero-title .title-main, .hero-title .title-main em, .title-main em b, .hero-sub { animation:none !important; }
+      .hero-title .title-brand { background-position:100% 0 !important; }
+    }
+
+    /* ── AI assistant dock: still frameless logos, now with a HUD label,
+       a neon floor line, brand-coloured hover glow, balanced sizes,
+       and the settings gear sitting at the end of the same row. ── */
+    .ai-strip-zone { flex-wrap:wrap; column-gap:0; row-gap:clamp(4px,.9dvh,10px); padding-top:clamp(4px,1dvh,12px); }
+    .ai-hud-label {
+      order:-1; flex:0 0 100%; display:flex; align-items:center; justify-content:center; gap:12px;
+      font:600 10px/1 var(--font-mono); letter-spacing:.32em; color:#A9B3C9; text-transform:uppercase;
+      text-shadow:0 0 10px rgba(255,154,61,.35), 0 2px 8px rgba(0,0,0,.9);
+    }
+    .ai-hud-label::before, .ai-hud-label::after {
+      content:""; height:1px; width:clamp(40px,12vw,150px);
+      background:linear-gradient(90deg,transparent,rgba(255,154,61,.7));
+      box-shadow:0 0 8px rgba(255,107,0,.5);
+    }
+    .ai-hud-label::after { background:linear-gradient(90deg,rgba(255,154,61,.7),transparent); }
+    .ai-hud-label b { font-weight:600; font-family:'Kantumruy Pro',sans-serif; letter-spacing:.04em; font-size:11px; color:#D6DCEA; }
+    .ai-logos-row { position:relative; max-width:640px; width:auto; flex:0 1 640px; gap:clamp(14px,3vw,40px); justify-content:center; padding:4px 8px 10px; }
+    .ai-logos-row::after { /* neon floor the logos stand on */
+      content:""; position:absolute; left:6%; right:6%; bottom:0; height:1px; pointer-events:none;
+      background:linear-gradient(90deg,transparent,rgba(255,154,61,.55) 20%,rgba(255,94,126,.55) 50%,rgba(82,255,159,.45) 80%,transparent);
+      box-shadow:0 0 12px rgba(255,107,0,.45), 0 0 26px rgba(255,94,126,.25);
+    }
+    .ai-logo-link { width:clamp(30px,4.4dvh,40px); height:clamp(30px,4.4dvh,40px); --glow:rgba(255,255,255,.75); }
+    .ai-logo-link svg { transform:scale(var(--k,1)); transform-origin:center; }
+    .ai-logo-link[aria-label="ChatGPT"]     { --glow:rgba(255,255,255,.8); }
+    .ai-logo-link[aria-label="Codex"]       { --glow:#8F8CFF; --k:.88; }
+    .ai-logo-link[aria-label="Claude"]      { --glow:#E8845C; }
+    .ai-logo-link[aria-label="Gemini"]      { --glow:#5B9BFF; --k:1.1; }
+    .ai-logo-link[aria-label="Antigravity"] { --glow:#3FD6C9; --k:1.06; }
+    .ai-logo-link[aria-label="Grok"]        { --glow:rgba(255,255,255,.8); --k:.94; }
+    .ai-logo-link:hover, .ai-logo-link:focus-visible {
+      filter:drop-shadow(0 0 12px var(--glow)) drop-shadow(0 0 4px var(--glow)) drop-shadow(0 12px 18px rgba(0,0,0,.85));
+    }
+    .ai-logo-link::after { border-color:var(--glow); box-shadow:0 0 14px -2px var(--glow); }
+    /* settings gear joins the row, after a thin divider */
+    .hub-settings {
+      position:relative; right:auto; top:auto; transform:none; order:2;
+      margin-left:clamp(10px,2vw,22px); padding-left:clamp(12px,2vw,22px); width:auto; height:32px;
+      align-self:center; margin-bottom:10px;
+    }
+    .hub-settings::before {
+      content:""; position:absolute; left:0; top:4px; bottom:4px; width:1px;
+      background:linear-gradient(180deg,transparent,rgba(169,179,201,.45),transparent);
+    }
+    .hub-settings svg { width:20px; height:20px; filter:drop-shadow(0 4px 8px rgba(0,0,0,.8)); }
+    @media(max-width:860px) {
+      .ai-hud-label { font-size:8px; letter-spacing:.24em; gap:8px; }
+      .ai-hud-label b { font-size:9.5px; }
+      .ai-logos-row { padding-right:8px; gap:clamp(10px,4.2vw,22px); flex-basis:auto; }
+      .ai-logo-link { width:26px; height:26px; }
+      .hub-settings { margin-left:8px; padding-left:10px; }
+    }
+    @media(max-width:860px) and (max-height:670px) {
+      .ai-hud-label { display:none; }
+    }
   </style>
 </head>
 <body>
   <div class="cosmos" aria-hidden="true">
     <div class="cosmos-nebula"></div>
+    <div class="cyber-scan"></div>
     <div class="cosmos-stars far"></div>
     <div class="cosmos-stars near"></div>
     <div class="cosmos-stars sparkle"></div>
+    <div class="cosmos-big">
+      <i class="bstar" style="--x:3%;--y:12%;--s:7px;--t:5s;--d:0s"></i>
+      <i class="bstar" style="--x:2%;--y:55%;--s:5px;--t:6s;--d:-2s"></i>
+      <i class="bstar" style="--x:5%;--y:90%;--s:9px;--t:7s;--d:-1s;--c:rgba(255,154,61,.45)"></i>
+      <i class="bstar" style="--x:48%;--y:4%;--s:5px;--t:5.5s;--d:-3s"></i>
+      <i class="bstar" style="--x:55%;--y:30%;--s:7px;--t:6.5s;--d:-1.5s;--c:rgba(255,94,126,.45)"></i>
+      <i class="bstar" style="--x:97%;--y:48%;--s:7px;--t:5s;--d:-2.5s"></i>
+      <i class="bstar" style="--x:96%;--y:8%;--s:5px;--t:6s;--d:-4s"></i>
+      <i class="bstar" style="--x:35%;--y:94%;--s:7px;--t:7s;--d:-.5s;--c:rgba(82,255,159,.4)"></i>
+      <i class="bstar" style="--x:72%;--y:95%;--s:5px;--t:5s;--d:-3.5s"></i>
+      <i class="bstar" style="--x:90%;--y:70%;--s:9px;--t:6s;--d:-1s;--c:rgba(255,208,0,.4)"></i>
+      <i class="bstar" style="--x:62%;--y:7%;--s:5px;--t:4.5s;--d:-2s"></i>
+      <i class="bstar" style="--x:30%;--y:34%;--s:5px;--t:6s;--d:-5s"></i>
+      <i class="bstar spark" style="--x:58%;--y:15%;--s:32px;--t:6s;--d:-1s;--c:#FFB24A"></i>
+      <i class="bstar spark" style="--x:93%;--y:28%;--s:39px;--t:7.5s;--d:-3s;--c:#FFFFFF"></i>
+      <i class="bstar spark" style="--x:3.5%;--y:72%;--s:28px;--t:6.5s;--d:-4.5s;--c:#FF6F96"></i>
+      <i class="bstar spark" style="--x:86%;--y:91%;--s:25px;--t:5.5s;--d:-2s;--c:#FFE27A"></i>
+    </div>
     <span class="meteor" style="--meteor-x:88%;--meteor-y:8%;--meteor-delay:-2s"></span>
     <span class="meteor" style="--meteor-x:62%;--meteor-y:3%;--meteor-delay:7.5s"></span>
   </div>
   <div class="vst-shell">
 <section class="ecosystem-hero" aria-labelledby="heroTitle">
       <div class="hero-copy">
-        <h1 id="heroTitle">VANN SITHA TRADING<span>AI Ecosystem</span></h1>
+        <span class="hero-badge"><span class="ring-light" aria-hidden="true"></span><i aria-hidden="true">✦</i>VST · CONNECTED AI UNIVERSE</span>
+        <h1 id="heroTitle" class="hero-title">
+          <span class="title-brand">VANN SITHA TRADING</span>
+          <span class="title-main"><strong class="title-ai">AI</strong> <em>Ecosystem<b>.</b></em></span>
+        </h1>
+        <p class="hero-sub">កម្មវិធី ៨ និងជំនួយការ AI ៦ របស់ VST នៅកន្លែងតែមួយ ចុចតែម្តងបើកបានភ្លាម។</p>
+        <ul class="hero-meta" aria-label="សង្ខេប">
+          <li><i style="--dot:#ff9a3d"></i>៨ កម្មវិធី</li>
+          <li><i style="--dot:#ff5e7e"></i>៦ ជំនួយការ AI</li>
+          <li><i style="--dot:#52ff9f"></i>Mac · Web · Cloud</li>
+        </ul>
       </div>
       <div class="orbit-scene" aria-hidden="true">
         <div class="orbit-aura"></div>
@@ -1312,7 +1576,7 @@
                 <path d="M19 11l2 5-5 5"/>
                 <circle cx="12" cy="17" r="2.5"/>
               </svg></span></div>
-        <div class="orbit-core"><span class="core-spark">✦</span><strong>VST</strong><small>AI ECOSYSTEM</small></div>
+        <div class="orbit-core"><span class="ring-light"></span><span class="core-spark">✦</span><strong>VST</strong><small>AI ECOSYSTEM</small></div>
         <div class="orbit-floor"></div>
       </div>
     </section>
@@ -1593,6 +1857,7 @@
     <!-- 3. BENEATH MAIN GRID: SIX AI ASSISTANT LOGOS ONLY
          (No enclosing cards, no colored tiles, no background shapes, no frames, no visible text labels) -->
     <nav class="ai-strip-zone" aria-label="AI Assistant Direct Shortcuts">
+      <div class="ai-hud-label" aria-hidden="true"><span>AI Assistants · <b>ជំនួយការ AI</b></span></div>
       <button type="button" id="configureLinks" class="hub-settings" aria-label="កំណត់ Link កម្មវិធី" title="កំណត់ Link និងចលនា">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m9 3-.6 2.4-2 .9-2.3-.7-2 3.4 1.8 1.7v2.5L2.1 15l2 3.4 2.3-.7 2 .9L9 21h4l.6-2.4 2-.9 2.3.7 2-3.4-1.8-1.8v-2.5L19.9 9l-2-3.4-2.3.7-2-.9L13 3z"/><circle cx="11" cy="12" r="3"/></svg>
       </button>
@@ -1802,6 +2067,15 @@
       syncStarMotion();
       refreshCards();
     })();
+  </script>
+  <script>
+    // Running light on each app card, shown only on hover / keyboard focus.
+    document.querySelectorAll('.app-card').forEach(function (card) {
+      var ring = document.createElement('span');
+      ring.className = 'ring-light';
+      ring.setAttribute('aria-hidden', 'true');
+      card.appendChild(ring);
+    });
   </script>
 </body>
 </html>
