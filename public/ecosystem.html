@@ -1619,10 +1619,10 @@
           </div>
         </a>
 
-        <!-- ROW 1, CARD 2: Khmer Voice Studio (RED) -->
+        <!-- ROW 1, CARD 2: VST Voice Studio (RED) -->
         <a href="#khmer-voice-studio"
            class="app-card theme-red"
-           data-app-title="Khmer Voice Studio"
+           data-app-title="VST Voice Studio"
            data-app-desc="Khmer AI voice synthesis, neural narration & audio studio."
            data-app-location="voice.vannsitha.com"
            data-app-url="https://voice.vannsitha.com (Backend unconfirmed)"
@@ -1645,7 +1645,7 @@
             <span class="card-index">02</span>
           </div>
           <div class="card-body">
-            <h2 class="app-title">Khmer Voice Studio</h2>
+            <h2 class="app-title">VST Voice Studio</h2>
             <p class="app-desc">បង្កើតសំឡេង AI និងអូឌីយ៉ូខ្មែរ</p>
           </div>
           <div class="card-footer">
@@ -2028,11 +2028,11 @@
       const closeBtn = document.getElementById('modalCloseBtn');
       const cards=[...document.querySelectorAll('.app-card')];
       const choice=document.getElementById('appChoice'),input=document.getElementById('appUrl'),feedback=document.getElementById('linkFeedback'),launch=document.getElementById('launchSaved');
-      const defaults={'VST ERP':'https://vst-intelligence-dashboard.sethavann.chatgpt.site/','Khmer Voice Studio':'https://voice.vannsitha.com/','VST Downloader':'http://127.0.0.1:38473/','VST Sales Coach':'https://vst-sales-coach-ai.ai.studio/','AI Sale Studio':new URL('/sale-studio',location.origin).href,'Auto Post Tool':'','Kot Luy':'http://localhost:3000/','OpenClaw':'https://openclaw.139-180-143-33.sslip.io/chat/main'};
+      const defaults={'VST ERP':'https://vst-intelligence-dashboard.sethavann.chatgpt.site/','VST Voice Studio':'https://voice.vannsitha.com/','VST Downloader':'http://127.0.0.1:38473/','VST Sales Coach':'https://vst-sales-coach-ai.ai.studio/','AI Sale Studio':new URL('/sale-studio',location.origin).href,'Auto Post Tool':'','Kot Luy':'http://localhost:3000/','OpenClaw':'https://openclaw.139-180-143-33.sslip.io/chat/main'};
       const key='vst-ecosystem-production-links-v1';
       const urls={...defaults};
       function safeUrl(value){try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:'';}catch{return '';}}
-      try{const saved=JSON.parse(localStorage.getItem(key));for(const name of Object.keys(defaults))if(typeof saved?.[name]==='string')urls[name]=safeUrl(saved[name]);}catch{}
+      try{const saved=JSON.parse(localStorage.getItem(key));if(typeof saved?.['Khmer Voice Studio']==='string'&&typeof saved?.['VST Voice Studio']!=='string')saved['VST Voice Studio']=saved['Khmer Voice Studio'];for(const name of Object.keys(defaults))if(typeof saved?.[name]==='string')urls[name]=safeUrl(saved[name]);}catch{}
       function persist(){try{localStorage.setItem(key,JSON.stringify(urls));return true;}catch{return false;}}
       function refreshCards(){for(const card of cards){const name=card.dataset.appTitle,url=urls[name];card.href=url||'#configure-links';card.classList.toggle('unconfigured',!url);card.setAttribute('aria-label',name+(url?' — បើក Tab ថ្មី':' — មិនទាន់ភ្ជាប់'));card.querySelector('.launch-cue').textContent=url?'បើក ↗':'ភ្ជាប់ +';if(url){card.target='_blank';card.rel='noopener noreferrer';}else{card.removeAttribute('target');card.removeAttribute('rel');}if(name==='Auto Post Tool')card.querySelector('.host-tag-text').textContent=url?'Web App':'មិនទាន់ភ្ជាប់';}}
       function details(){const name=choice.value,card=cards.find(c=>c.dataset.appTitle===name);input.value=urls[name];input.setCustomValidity('');launch.hidden=!urls[name];if(urls[name])launch.href=urls[name];else launch.removeAttribute('href');dialog.style.setProperty('--modal-neon',card.dataset.appColor);noteEl.textContent=['VST Downloader','Kot Luy'].includes(name)?'ត្រូវបើកកម្មវិធីលើ Mac នេះជាមុន។ Link localhost មិនភ្ជាប់ពីទូរស័ព្ទទៅ Mac ដោយស្វ័យប្រវត្តិទេ។':'ចុច Card ដើម្បីបើកកម្មវិធីក្នុង Tab ថ្មី។ ផ្ទាំងមេនៅដដែល។';}
