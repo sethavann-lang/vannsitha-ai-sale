@@ -39,8 +39,9 @@ export default function LoginPage() {
         return;
       }
 
-      // Navigate directly to dashboard root after successful login
-      router.push("/");
+      // Only permit our known local workspace as a return destination.
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(next === "/sale-studio" ? "/sale-studio" : "/");
       router.refresh();
     } catch {
       setError("មិនអាចភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើបានទេ សូមពិនិត្យអ៊ីនធឺណិត");

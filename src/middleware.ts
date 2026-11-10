@@ -34,9 +34,11 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   const session = await verifySessionToken(token);
 
-  // If already authenticated and visiting /login, redirect to /
+  // Return sales-app visitors to their workspace after sign-in.
+  const loginDestination = req.nextUrl.searchParams.get("next") === "/sale-studio"
+    ? "/sale-studio" : "/";
   if (pathname === "/login" && session.valid) {
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL(loginDestination, req.url));
   }
 
   // Allow public API or public Page
@@ -46,6 +48,13 @@ export async function middleware(req: NextRequest) {
 
   // Allow authenticated requests
   if (session.valid) {
+    if (pathname === "/") {
+      const hub = req.nextUrl.clone();
+      hub.pathname = "/ecosystem.html";
+      const response = NextResponse.rewrite(hub);
+      response.headers.set("Cache-Control", "private, no-store");
+      return response;
+    }
     return NextResponse.next();
   }
 
@@ -59,7 +68,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // Unauthorized Page routes redirect cleanly to /login
-  return NextResponse.redirect(new URL("/login", req.url));
+  const login = new URL("/login", req.url);
+  if (pathname === "/sale-studio") login.searchParams.set("next", "/sale-studio");
+  return NextResponse.redirect(login);
 }
 
 export const config = {

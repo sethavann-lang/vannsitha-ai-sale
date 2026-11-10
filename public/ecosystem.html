@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="km" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>VANN SITHA TRADING — AI Ecosystem</title>
+  <meta name="google-site-verification" content="TjzC9bFJJifPukut0j66OQLpREuUKz1HtLiR0G64n5o" />
+  <meta name="description" content="កម្មវិធី និងជំនួយការ AI របស់ Vann Sitha Trading" />
+  <!-- Google Fonts: Space Grotesk, Plus Jakarta Sans, JetBrains Mono, and Kantumruy Pro for crisp Khmer rendering -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Kantumruy+Pro:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-void: #05060A;
+      --bg-surface: #0A0D15;
+      --bg-elevated: #101624;
+      --text-primary: #F7F9FF;
+      --text-secondary: #C2CAE0;
+      --text-muted: #A0ADC4;
+
+      /* Favorite Neon Palette: ORANGE, RED, GREEN, YELLOW */
+      --neon-orange: #FF6B00;
+      --neon-orange-bright: #FF9A3D;
+      --neon-red: #FF244C;
+      --neon-red-bright: #FF5E7E;
+      --neon-green: #00F27A;
+      --neon-green-bright: #52FF9F;
+      --neon-yellow: #FFD000;
+      --neon-yellow-bright: #FFE566;
+
+      --font-display: 'Space Grotesk', 'Kantumruy Pro', sans-serif;
+      --font-sans: 'Plus Jakarta Sans', 'Kantumruy Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100dvh;
+      background-color: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Cyberpunk Background Grid & Controlled Neon Lighting */
+    body {
+      background-image:
+        radial-gradient(circle at 14% 12%, rgba(255, 107, 0, 0.13) 0%, transparent 40%),
+        radial-gradient(circle at 86% 14%, rgba(255, 36, 76, 0.11) 0%, transparent 38%),
+        radial-gradient(circle at 22% 86%, rgba(0, 242, 122, 0.08) 0%, transparent 42%),
+        radial-gradient(circle at 78% 84%, rgba(255, 208, 0, 0.09) 0%, transparent 42%),
+        linear-gradient(180deg, #070910 0%, #040508 100%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Subtle tactical circuit-grid overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: radial-gradient(ellipse at 50% 45%, black 40%, transparent 88%);
+      -webkit-mask-image: radial-gradient(ellipse at 50% 45%, black 40%, transparent 88%);
+      z-index: 0;
+    }
+
+    /* Main Shell: engineered to fit 100dvh without vertical scroll on desktop & mobile */
+    .vst-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1280px;
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding: clamp(8px, 2dvh, 22px) clamp(12px, 2.8vw, 36px);
+      padding-top: max(clamp(8px, 2dvh, 22px), env(safe-area-inset-top));
+      padding-bottom: max(clamp(8px, 1.8dvh, 20px), env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 1fr auto;
+      gap: clamp(8px, 1.8dvh, 20px);
+      align-items: center;
+    }
+
+    /* ==========================================
+       1. COMPACT TOP HEADER
+       ========================================== */
+    .vst-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: clamp(6px, 1.2dvh, 13px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      position: relative;
+      min-width: 0;
+    }
+
+    /* Multi-spectrum laser accent line on header bottom */
+    .vst-header::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: min(420px, 75%);
+      height: 1.5px;
+      background: linear-gradient(90deg, var(--neon-orange), var(--neon-red), var(--neon-yellow), var(--neon-green), transparent);
+      box-shadow: 0 0 12px rgba(255, 107, 0, 0.55);
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: clamp(8px, 1.2vw, 14px);
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .brand-crest {
+      width: clamp(32px, 4.5dvh, 42px);
+      height: clamp(32px, 4.5dvh, 42px);
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(255, 107, 0, 0.24), rgba(255, 36, 76, 0.16));
+      border: 1px solid rgba(255, 140, 45, 0.65);
+      box-shadow:
+        0 0 18px rgba(255, 107, 0, 0.32),
+        inset 0 0 10px rgba(255, 208, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-crest svg {
+      width: 64%;
+      height: 64%;
+      filter: drop-shadow(0 0 6px rgba(255, 148, 54, 0.75));
+    }
+
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .brand-main-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-name {
+      font-family: var(--font-display);
+      font-size: clamp(0.92rem, 1.7vw, 1.35rem);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      text-shadow: 0 0 18px rgba(255, 107, 0, 0.38);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-divider {
+      color: var(--neon-orange);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.95rem;
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+
+    .brand-sub {
+      font-family: var(--font-mono);
+      font-size: clamp(0.75rem, 1vw, 0.88rem);
+      font-weight: 600;
+      color: var(--neon-yellow-bright);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .domain-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+    }
+
+    .domain-pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--neon-green);
+      box-shadow: 0 0 8px var(--neon-green);
+    }
+
+    .proto-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: rgba(255, 208, 0, 0.1);
+      border: 1px solid rgba(255, 208, 0, 0.42);
+      color: var(--neon-yellow-bright);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ==========================================
+       2. EIGHT MAIN APP CARDS (4x2 Desktop, 2x4 Phone)
+       ========================================== */
+    .apps-stage {
+      width: 100%;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .apps-grid {
+      width: 100%;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: clamp(10px, 1.5vw, 18px);
+    }
+
+    /* Individual App Card — Tactical Cyber-Prism Chassis */
+    .app-card {
+      --card-neon: var(--neon-orange);
+      --card-neon-bright: var(--neon-orange-bright);
+      --card-rgb: 255, 107, 0;
+
+      position: relative;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-decoration: none;
+      color: var(--text-primary);
+      background:
+        radial-gradient(125% 105% at 0% 0%, rgba(var(--card-rgb), 0.20) 0%, rgba(var(--card-rgb), 0.04) 50%, transparent 100%),
+        linear-gradient(160deg, rgba(20, 26, 40, 0.95) 0%, rgba(8, 11, 18, 0.98) 100%);
+      border-radius: 16px;
+      padding: clamp(12px, 2.2dvh, 22px) clamp(12px, 1.5vw, 20px);
+      min-height: clamp(110px, 25.5dvh, 220px);
+      border: 1px solid rgba(var(--card-rgb), 0.42);
+      box-shadow:
+        0 12px 30px -10px rgba(0, 0, 0, 0.88),
+        0 0 20px -5px rgba(var(--card-rgb), 0.25),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                  border-color 0.2s ease,
+                  box-shadow 0.2s ease;
+      overflow: hidden;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Top-left neon energy rail + bottom laser bar */
+    .app-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 14px;
+      right: 38%;
+      height: 2.5px;
+      background: linear-gradient(90deg, var(--card-neon-bright), rgba(var(--card-rgb), 0.2), transparent);
+      box-shadow: 0 0 12px var(--card-neon);
+      opacity: 0.95;
+      transition: right 0.25s ease, opacity 0.25s ease;
+      z-index: 2;
+    }
+
+    .app-card::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--card-neon-bright), transparent);
+      box-shadow: 0 -2px 14px var(--card-neon);
+      opacity: 0.85;
+      transition: left 0.25s ease, right 0.25s ease, opacity 0.25s ease;
+      z-index: 2;
+    }
+
+    /* Subtle Oversized Watermark Glyph in Bottom-Right of Card */
+    .card-watermark {
+      position: absolute;
+      right: -10px;
+      bottom: -12px;
+      width: clamp(68px, 10.5dvh, 104px);
+      height: clamp(68px, 10.5dvh, 104px);
+      color: rgb(var(--card-rgb));
+      opacity: 0.055;
+      pointer-events: none;
+      transform: rotate(-8deg);
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 0;
+    }
+
+    .app-card:hover .card-watermark {
+      opacity: 0.1;
+      transform: rotate(0deg) scale(1.06);
+    }
+
+    /* Corner HUD micro-bracket in top-right */
+    .card-corner-hud {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 10px;
+      height: 10px;
+      border-top: 1.5px solid rgba(var(--card-rgb), 0.65);
+      border-right: 1.5px solid rgba(var(--card-rgb), 0.65);
+      border-top-right-radius: 4px;
+      pointer-events: none;
+    }
+
+    .app-card:hover,
+    .app-card:focus-visible {
+      transform: translateY(-3px);
+      border-color: var(--card-neon-bright);
+      box-shadow:
+        0 16px 34px -8px rgba(0, 0, 0, 0.92),
+        0 0 28px -2px rgba(var(--card-rgb), 0.46),
+        inset 0 0 22px rgba(var(--card-rgb), 0.12);
+      outline: none;
+    }
+
+    .app-card:hover::before,
+    .app-card:focus-visible::before {
+      right: 12%;
+      opacity: 1;
+    }
+
+    .app-card:hover::after,
+    .app-card:focus-visible::after {
+      left: 4%;
+      right: 4%;
+      opacity: 1;
+    }
+
+    .app-card:active {
+      transform: translateY(0px) scale(0.99);
+    }
+
+    /* 4 Favorite Color Theme Assignments across the 8 Cards */
+    .theme-orange {
+      --card-neon: #FF6B00;
+      --card-neon-bright: #FF9A3D;
+      --card-rgb: 255, 107, 0;
+    }
+    .theme-red {
+      --card-neon: #FF244C;
+      --card-neon-bright: #FF6382;
+      --card-rgb: 255, 36, 76;
+    }
+    .theme-green {
+      --card-neon: #00F27A;
+      --card-neon-bright: #52FF9F;
+      --card-rgb: 0, 242, 122;
+    }
+    .theme-yellow {
+      --card-neon: #FFD000;
+      --card-neon-bright: #FFE566;
+      --card-rgb: 255, 208, 0;
+    }
+
+    /* Card Top Row: Custom Neon Concept Icon + Slot Number */
+    .card-top,
+    .card-body,
+    .card-footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .app-emblem {
+      width: clamp(34px, 5.2dvh, 50px);
+      height: clamp(34px, 5.2dvh, 50px);
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 28% 24%, rgba(var(--card-rgb), 0.36), rgba(var(--card-rgb), 0.08) 76%),
+        rgba(8, 11, 18, 0.92);
+      border: 1.5px solid rgba(var(--card-rgb), 0.72);
+      box-shadow:
+        0 0 18px rgba(var(--card-rgb), 0.35),
+        inset 0 0 10px rgba(var(--card-rgb), 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--card-neon-bright);
+      flex-shrink: 0;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .app-card:hover .app-emblem {
+      transform: scale(1.06);
+      box-shadow:
+        0 0 24px rgba(var(--card-rgb), 0.6),
+        inset 0 0 12px rgba(var(--card-rgb), 0.35);
+    }
+
+    .app-emblem svg {
+      width: 58%;
+      height: 58%;
+      stroke: var(--card-neon-bright);
+      filter: drop-shadow(0 0 5px rgba(var(--card-rgb), 0.7));
+    }
+
+    .card-index {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--card-neon-bright);
+      letter-spacing: 0.04em;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(var(--card-rgb), 0.12);
+      border: 1px solid rgba(var(--card-rgb), 0.32);
+    }
+
+    /* Body & Typography inside App Card */
+    .card-body {
+      margin-top: clamp(4px, 1.1dvh, 14px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(2px, 0.45dvh, 5px);
+      min-width: 0;
+    }
+
+    .app-title {
+      font-family: var(--font-display);
+      font-size: clamp(0.84rem, 1.25vw, 1.18rem);
+      font-weight: 700;
+      line-height: 1.22;
+      color: #FFFFFF;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .app-desc {
+      font-size: clamp(0.75rem, 0.88vw, 0.84rem);
+      line-height: 1.35;
+      color: var(--text-secondary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Uncluttered Secondary Metadata Footer inside Card */
+    .card-footer {
+      margin-top: clamp(4px, 1.1dvh, 14px);
+      padding-top: clamp(4px, 0.8dvh, 10px);
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .host-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .host-tag::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--card-neon-bright);
+      box-shadow: 0 0 7px var(--card-neon);
+      flex-shrink: 0;
+    }
+
+    .host-tag-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .launch-cue {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--card-neon-bright);
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      opacity: 0.88;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .app-card:hover .launch-cue {
+      opacity: 1;
+      transform: translateX(2px);
+    }
+
+    /* ==========================================
+       3. SIX AI ASSISTANT LOGOS ONLY (BENEATH MAIN GRID)
+       Explicit Constraint: NO enclosing cards, colored tiles,
+       background shapes, or frames around these AI assistant logos.
+       No individual visible text labels; provide accessible names/tooltips.
+       ========================================== */
+    .ai-strip-zone {
+      width: 100%;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(2px, 0.5dvh, 8px) 0;
+    }
+
+    .ai-logos-row {
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 8px;
+      list-style: none;
+    }
+
+    /* Pure bare logo link: NO border, NO background, NO tile, NO frame */
+    .ai-logo-link {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: clamp(24px, 3.8dvh, 36px);
+      height: clamp(24px, 3.8dvh, 36px);
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      padding: 0;
+      color: #F4F7FF;
+      text-decoration: none;
+      opacity: 0.88;
+      flex-shrink: 0;
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.18s ease,
+                  filter 0.18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .ai-logo-link svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    .ai-logo-link:hover,
+    .ai-logo-link:focus-visible {
+      opacity: 1;
+      transform: translateY(-3px) scale(1.12);
+      filter: drop-shadow(0 0 10px rgba(255, 148, 54, 0.6));
+      outline: none;
+    }
+
+    .ai-logo-link:active {
+      transform: translateY(0) scale(0.96);
+    }
+
+    /* Accessible Tooltip on Hover / Keyboard Focus only (no permanent text labels) */
+    .ai-logo-link::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(12, 16, 26, 0.96);
+      border: 1px solid rgba(255, 148, 54, 0.45);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+      z-index: 20;
+    }
+
+    .ai-logo-link:hover::after,
+    .ai-logo-link:focus-visible::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ==========================================
+       4. INTERACTIVE PROTOTYPE INSPECTOR MODAL
+       ========================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 5, 10, 0.8);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-dialog {
+      width: 100%;
+      max-width: 460px;
+      background: linear-gradient(165deg, #121826 0%, #090C14 100%);
+      border: 1px solid var(--modal-neon, var(--neon-orange));
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px -6px var(--modal-neon, var(--neon-orange));
+      color: var(--text-primary);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-primary);
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+
+    .modal-meta-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+    }
+
+    .modal-meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .modal-meta-label {
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+    }
+
+    .modal-meta-val {
+      color: #FFFFFF;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .modal-note {
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: var(--text-primary);
+    }
+
+    /* ==========================================
+       5. RESPONSIVE BREAKPOINTS (MOBILE 2x4 & SMALL SCREENS)
+       Tested specifically for:
+       - Desktop 1366x768
+       - Phone 390x844 (and 390x710 with browser bars)
+       - Compact Phone 320x568
+       ========================================== */
+    @media (max-width: 860px) {
+      .vst-shell {
+        padding: clamp(6px, 1.3dvh, 14px) clamp(10px, 3vw, 16px);
+        gap: clamp(6px, 1.1dvh, 12px);
+      }
+
+      .vst-header {
+        padding-bottom: clamp(4px, 0.9dvh, 9px);
+      }
+
+      .brand-main-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1px;
+      }
+
+      .brand-divider {
+        display: none;
+      }
+
+      .brand-name {
+        font-size: clamp(0.82rem, 4vw, 1.04rem);
+      }
+
+      .brand-sub {
+        font-size: 0.75rem;
+      }
+
+      .domain-pill {
+        display: none;
+      }
+
+      .apps-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(4, minmax(0, 1fr));
+        gap: clamp(6px, 1dvh, 11px);
+      }
+
+      .app-card {
+        min-height: clamp(74px, 15.6dvh, 138px);
+        padding: clamp(7px, 1.3dvh, 13px) clamp(9px, 2.5vw, 13px);
+        border-radius: 13px;
+      }
+
+      .app-emblem {
+        width: clamp(28px, 4.2dvh, 36px);
+        height: clamp(28px, 4.2dvh, 36px);
+        border-radius: 9px;
+      }
+
+      .card-body {
+        margin-top: clamp(3px, 0.7dvh, 7px);
+        gap: 2px;
+      }
+
+      .app-title {
+        font-size: clamp(0.78rem, 3.6vw, 0.94rem);
+      }
+
+      .app-desc {
+        font-size: 0.75rem;
+        -webkit-line-clamp: 1;
+      }
+
+      .card-footer {
+        margin-top: clamp(3px, 0.6dvh, 7px);
+        padding-top: clamp(3px, 0.5dvh, 6px);
+      }
+
+      .launch-cue {
+        display: none;
+      }
+
+      .ai-logos-row {
+        max-width: 100%;
+        padding: 0 6px;
+      }
+
+      .ai-logo-link {
+        width: clamp(23px, 3.5dvh, 29px);
+        height: clamp(23px, 3.5dvh, 29px);
+      }
+    }
+
+    /* Ultra-compact height adjustments (e.g. 320x568 iPhone SE or mobile with large toolbars) */
+    @media (max-height: 670px) and (max-width: 860px) {
+      .vst-shell {
+        padding: 6px 8px;
+        gap: 5px;
+      }
+
+      .vst-header {
+        padding-bottom: 4px;
+      }
+
+      .brand-crest {
+        width: 28px;
+        height: 28px;
+      }
+
+      .brand-name {
+        font-size: 0.8rem;
+      }
+
+      .brand-sub {
+        font-size: 0.75rem;
+      }
+
+      .proto-badge {
+        padding: 3px 6px;
+        font-size: 0.75rem;
+      }
+
+      .apps-grid {
+        gap: 6px;
+      }
+
+      .app-card {
+        min-height: 74px;
+        padding: 7px 8px;
+        border-radius: 10px;
+      }
+
+      .app-emblem {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+      }
+
+      .card-index {
+        font-size: 0.75rem;
+        padding: 1px 5px;
+      }
+
+      .card-body {
+        margin-top: 3px;
+      }
+
+      .app-title {
+        font-size: 0.76rem;
+      }
+
+      .app-desc {
+        display: none;
+      }
+
+      .card-footer {
+        margin-top: 3px;
+        padding-top: 2px;
+        border-top: none;
+      }
+
+      .host-tag {
+        font-size: 0.75rem;
+      }
+
+      .ai-strip-zone {
+        padding: 2px 0;
+      }
+
+      .ai-logo-link {
+        width: 22px;
+        height: 22px;
+      }
+    }
+
+    /* Reduced Motion Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="vst-shell">
+    <!-- 1. COMPACT TOP HEADER -->
+    <header class="vst-header" role="banner">
+      <div class="brand-cluster">
+        <div class="brand-crest" aria-hidden="true">
+          <!-- Custom VST Cyber Monogram Crest -->
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 7L13.5 25L18.5 14.5H27" stroke="#FF8822" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 7H27M22.5 7V25" stroke="#FFD000" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="5" cy="7" r="2" fill="#00F27A"/>
+            <circle cx="27" cy="14.5" r="2" fill="#FF244C"/>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <div class="brand-main-row">
+            <h1 class="brand-name">VANN SITHA TRADING</h1>
+            <span class="brand-divider" aria-hidden="true">//</span>
+            <span class="brand-sub">AI Ecosystem</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-meta">
+        <div class="domain-pill" title="Target root launcher domain">
+          <span class="dot" aria-hidden="true"></span>
+          <span>vannsitha.com</span>
+        </div>
+        <button type="button" class="proto-badge" id="configureLinks" aria-label="កំណត់ Link កម្មវិធី">កំណត់ Link</button>
+      </div>
+    </header>
+
+    <!-- 2. MAIN 8-APP LAUNCHER GRID (Desktop: 4 cols x 2 rows | Phone: 2 cols x 4 rows) -->
+    <main class="apps-stage" aria-label="VST Main Applications">
+      <div class="apps-grid">
+        <!-- ROW 1, CARD 1: VST ERP (ORANGE) -->
+        <a href="#vst-erp"
+           class="app-card theme-orange"
+           data-app-title="VST ERP"
+           data-app-desc="Business operations, team management & executive reporting dashboard."
+           data-app-location="ChatGPT Site (External Hosted)"
+           data-app-url="Placeholder · ChatGPT Site URL"
+           data-app-note="Currently accessed via a hosted ChatGPT Site. Links remain safe placeholders until final URL mapping is confirmed."
+           data-app-color="#FF6B00">
+          <span class="card-corner-hud" aria-hidden="true"></span>
+          <svg class="card-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><path d="M3 15.5h7M3 19.5h4.5"/>
+          </svg>
+          <div class="card-top">
+            <div class="app-emblem" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                <path d="M3 15.5h7M3 19.5h4.5"/>
+              </svg>
+            </div>
+            <span class="card-index">01</span>
+          </div>
+          <div class="card-body">
+            <h2 class="app-title">VST ERP</h2>
+            <p class="app-desc">គ្រប់គ្រងអាជីវកម្ម និងរបាយការណ៍</p>
+          </div>
+          <div class="card-footer">
+            <span class="host-tag"><span class="host-tag-text">ChatGPT Site</span></span>
+            <span class="launch-cue" aria-hidden="true">OPEN ↗</span>
+          </div>
+        </a>
+
+        <!-- ROW 1, CARD 2: Khmer Voice Studio (RED) -->
+        <a href="#khmer-voice-studio"
+           class="app-card theme-red"
+           data-app-title="Khmer Voice Studio"
+           data-app-desc="Khmer AI voice synthesis, neural narration & audio studio."
+           data-app-location="voice.vannsitha.com"
+           data-app-url="https://voice.vannsitha.com (Backend unconfirmed)"
+           data-app-note="Visible address is voice.vannsitha.com; underlying backend hosting is not yet finalized."
+           data-app-color="#FF244C">
+          <span class="card-corner-hud" aria-hidden="true"></span>
+          <svg class="card-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <path d="M12 3v18M8 7v10M16 7v10M4 10v4M20 10v4"/>
+          </svg>
+          <div class="card-top">
+            <div class="app-emblem" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v18"/>
+                <path d="M8 7v10"/>
+                <path d="M16 7v10"/>
+                <path d="M4 10v4"/>
+                <path d="M20 10v4"/>
+              </svg>
+            </div>
+            <span class="card-index">02</span>
+          </div>
+          <div class="card-body">
+            <h2 class="app-title">Khmer Voice Studio</h2>
+            <p class="app-desc">បង្កើតសំឡេង AI និងអូឌីយ៉ូខ្មែរ</p>
+          </div>
+          <div class="card-footer">
+            <span class="host-tag"><span class="host-tag-text">voice.vannsitha.com</span></span>
+            <span class="launch-cue" aria-hidden="true">OPEN ↗</span>
+          </div>
+        </a>
+
+        <!-- ROW 1, CARD 3: VST Downloader (GREEN) -->
+        <a href="#vst-downloader"
+           class="app-card theme-green"
+           data-app-title="VST Downloader"
+           data-app-desc="High-speed video & audio extraction and format converter."
+           data-app-location="លើ Mac (Local macOS App)"
+           data-app-url="Local Mac Environment Only"
+           data-app-note="Runs locally on លោកគ្រូ's Mac. Not directly accessible from mobile devices unless remote/tunnel access is added later."
+           data-app-color="#00F27A">
+          <span class="card-corner-hud" aria-hidden="true"></span>
+          <svg class="card-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <path d="M12 3v12M7 11l5 5 5-5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+          </svg>
+          <div class="card-top">
+            <div class="app-emblem" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v12"/>
+                <path d="M7 11l5 5 5-5"/>
+                <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+              </svg>
+            </div>
+            <span class="card-index">03</span>
+          </div>
+          <div class="card-body">
+            <h2 class="app-title">VST Downloader</h2>
+            <p class="app-desc">ទាញយក និងបំប្លែងវីដេអូ/សំឡេង</p>
+          </div>
+          <div class="card-footer">
+            <span class="host-tag"><span class="host-tag-text">លើ Mac · Local</span></span>
+            <span class="launch-cue" aria-hidden="true">INFO ↗</span>
+          </div>
+        </a>
+
+        <!-- ROW 1, CARD 4: VST Sales Coach (YELLOW) -->
+        <a href="#vst-sales-coach"
+           class="app-card theme-yellow"
+           data-app-title="VST Sales Coach"
+           data-app-desc="AI sales methodology coaching, objection handling & training."
+           data-app-location="Google AI Studio Hosted"
+           data-app-url="Placeholder · ai.studio Hosted App"
+           data-app-note="Shown running on an ai.studio hosted link. Placeholder target until permanent shortcut URL is set."
+           data-app-color="#FFD000">
+          <span class="card-corner-hud" aria-hidden="true"></span>
+          <svg class="card-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+          </svg>
+          <div class="card-top">
+            <div class="app-emblem" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="8"/>
+                <circle cx="12" cy="12" r="3.5"/>
+                <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+              </svg>
+            </div>
+            <span class="card-index">04</span>
+          </div>
+          <div class="card-body">
+            <h2 class="app-title">VST Sales Coach</h2>
+            <p class="app-desc">គ្រូបង្វឹកជំនាញលក់ និងយុទ្ធសាស្ត្រ</p>
+          </div>
+          <div class="card-footer">
+            <span class="host-tag"><span class="host-tag-text">ai.studio Site</span></span>
+            <span class="launch-cue" aria-hidden="true">OPEN ↗</span>
+          </div>
+        </a>
+
+        <!-- ROW 2, CARD 5: AI Sale Studio (ORANGE) -->
+        <a href="#ai-sale-studio"
+           class="app-card theme-orange"
+           data-app-title="AI Sale Studio"
+           data-app-desc="AI customer conversation management & sales closing workspace."
+           data-app-location="vannsitha.com (Current Root App)"
+           data-app-url="Placeholder · Future Sub-route / Subdomain"
+           data-app-note="Currently occupies the root of vannsitha.com. Once this launcher becomes the root homepage, AI Sale Studio moves to its dedicated route."
+           data-app-color="#FF6B00">
+          <span class="card-corner-hud" aria-hidden="true"></span>
+          <svg class="card-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+          </svg>
+          <div class="card-top">
+            <div class="app-emblem" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+                <path d="M12 8l1.2 2.8L16 12l-2.8 1.2L12 16l-1.2-2.8L8 12l2.8-1.2L12 8z"/>
+              </svg>
+            </div>
+            <span class="card-index">05</span>
+          </div>
+          <div class="card-body">
+            <h2 class="app-title">AI Sale Studio</h2>
+            <p class="app-desc">គ្រប់គ្រងការសន្ទនា និងបិទការលក់</p>
+          </div>
+          <div class="card-footer">
+            <span class="host-tag"><span class="host-tag-text">Web App · Root</span></span>
+            <span class="launch-cue" aria-hidden="true">OPEN ↗</span>
+          </div>
+        </a>
+
+        <!-- ROW 2, CARD 6: Auto Post Tool (YELLOW) -->
+        <a href="#auto-post-tool"
+           class="app-card theme-yellow"
+           data-app-title="Auto Post Tool"
+           data-app-desc="Automated social content scheduling & multi-channel publishing."
+           data-app-location="Deployment Unconfirmed"
+           data-app-url="Placeholder · Endpoint Pending Confirmation"
+           data-app-note="Kept explicitly as Auto Post Tool. Hosting location and relationship to VST Assistant remain to be confirmed."
+           data-app-color="#FFD000">
+          <span class="card-corner-hud" aria-hidden="true"></span>
+          <svg class="card-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+          </svg>
+          <div class="card-top">
+            <div class="app-emblem" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 2L11 13"/>
+                <path d="M22 2L15 22l-4-9-9-4 20-7z"/>
+              </svg>
+            </div>
+            <span class="card-index">06</span>
+          </div>
+          <div class="card-body">
+            <h2 class="app-title">Auto Post Tool</h2>
+            <p class="app-desc">បង្ហោះមាតិកាស្វ័យប្រវត្តិ</p>
+          </div>
+          <div class="card-footer">
+            <span class="host-tag"><span class="host-tag-text">Host Pending</span></span>
+            <span class="launch-cue" aria-hidden="true">INFO ↗</span>
+          </div>
+        </a>
+
+        <!-- ROW 2, CARD 7: Kot Luy (GREEN) -->
+        <a href="#kot-luy"
+           class="app-card theme-green"
+           data-app-title="Kot Luy"
+           data-app-desc="Personal income, expense ledger & cashflow tracking."
+           data-app-location="លើ Mac (Local macOS Environment)"
+           data-app-url="Local Mac Environment Only"
+           data-app-note="Shown running locally on លោកគ្រូ's Mac. Marked honestly as a local Mac tool so it is not mistaken for a cloud-synced mobile web app."
+           data-app-color="#00F27A">
+          <span class="card-corner-hud" aria-hidden="true"></span>
+          <svg class="card-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          <div class="card-top">
+            <div class="app-emblem" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2.5"/>
+                <path d="M16 12h2"/>
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M7 9v6"/>
+              </svg>
+            </div>
+            <span class="card-index">07</span>
+          </div>
+          <div class="card-body">
+            <h2 class="app-title">Kot Luy</h2>
+            <p class="app-desc">កត់ត្រាចំណូល និងចំណាយប្រចាំថ្ងៃ</p>
+          </div>
+          <div class="card-footer">
+            <span class="host-tag"><span class="host-tag-text">លើ Mac · Local</span></span>
+            <span class="launch-cue" aria-hidden="true">INFO ↗</span>
+          </div>
+        </a>
+
+        <!-- ROW 2, CARD 8: OpenClaw (RED) -->
+        <a href="#openclaw"
+           class="app-card theme-red"
+           data-app-title="OpenClaw"
+           data-app-desc="Autonomous AI agent & cloud workflow automation server."
+           data-app-location="Cloud Server"
+           data-app-url="Placeholder · Cloud Server Endpoint"
+           data-app-note="Hosted on a cloud server for AI automation tasks. Target URL kept as a safe placeholder until confirmed."
+           data-app-color="#FF244C">
+          <span class="card-corner-hud" aria-hidden="true"></span>
+          <svg class="card-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <path d="M12 3l4 4-4 4-4-4 4-4zM5 11l-2 5 5 5M19 11l2 5-5 5"/><circle cx="12" cy="17" r="2.5"/>
+          </svg>
+          <div class="card-top">
+            <div class="app-emblem" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l4 4-4 4-4-4 4-4z"/>
+                <path d="M5 11l-2 5 5 5"/>
+                <path d="M19 11l2 5-5 5"/>
+                <circle cx="12" cy="17" r="2.5"/>
+              </svg>
+            </div>
+            <span class="card-index">08</span>
+          </div>
+          <div class="card-body">
+            <h2 class="app-title">OpenClaw</h2>
+            <p class="app-desc">ជំនួយការ AI និងស្វ័យប្រវត្តិកម្ម</p>
+          </div>
+          <div class="card-footer">
+            <span class="host-tag"><span class="host-tag-text">Cloud Server</span></span>
+            <span class="launch-cue" aria-hidden="true">OPEN ↗</span>
+          </div>
+        </a>
+      </div>
+    </main>
+
+    <!-- 3. BENEATH MAIN GRID: SIX AI ASSISTANT LOGOS ONLY
+         (No enclosing cards, no colored tiles, no background shapes, no frames, no visible text labels) -->
+    <nav class="ai-strip-zone" aria-label="AI Assistant Direct Shortcuts">
+      <div class="ai-logos-row">
+        <!-- 1. ChatGPT -->
+        <a href="https://chatgpt.com/"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="ai-logo-link"
+           aria-label="ChatGPT"
+           title="ChatGPT (chatgpt.com)"
+           data-tooltip="ChatGPT">
+          <svg fill="#FFFFFF" fill-rule="evenodd" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+            <path d="M9.205 8.658v-2.26c0-.19.072-.333.238-.428l4.543-2.616c.619-.357 1.356-.523 2.117-.523 2.854 0 4.662 2.212 4.662 4.566 0 .167 0 .357-.024.547l-4.71-2.759a.797.797 0 00-.856 0l-5.97 3.473zm10.609 8.8V12.06c0-.333-.143-.57-.429-.737l-5.97-3.473 1.95-1.118a.433.433 0 01.476 0l4.543 2.617c1.309.76 2.189 2.378 2.189 3.948 0 1.808-1.07 3.473-2.76 4.163zM7.802 12.703l-1.95-1.142c-.167-.095-.239-.238-.239-.428V5.899c0-2.545 1.95-4.472 4.591-4.472 1 0 1.927.333 2.712.928L8.23 5.067c-.285.166-.428.404-.428.737v6.898zM12 15.128l-2.795-1.57v-3.33L12 8.658l2.795 1.57v3.33L12 15.128zm1.796 7.23c-1 0-1.927-.332-2.712-.927l4.686-2.712c.285-.166.428-.404.428-.737v-6.898l1.974 1.142c.167.095.238.238.238.428v5.233c0 2.545-1.974 4.472-4.614 4.472zm-5.637-5.303l-4.544-2.617c-1.308-.761-2.188-2.378-2.188-3.948A4.482 4.482 0 014.21 6.327v5.423c0 .333.143.571.428.738l5.947 3.449-1.95 1.118a.432.432 0 01-.476 0zm-.262 3.9c-2.688 0-4.662-2.021-4.662-4.519 0-.19.024-.38.047-.57l4.686 2.71c.286.167.571.167.856 0l5.97-3.448v2.26c0 .19-.07.333-.237.428l-4.543 2.616c-.619.357-1.356.523-2.117.523zm5.899 2.83a5.947 5.947 0 005.827-4.756C22.287 18.339 24 15.84 24 13.296c0-1.665-.713-3.282-1.998-4.448.119-.5.19-.999.19-1.498 0-3.401-2.759-5.947-5.946-5.947-.642 0-1.26.095-1.88.31A5.962 5.962 0 0010.205 0a5.947 5.947 0 00-5.827 4.757C1.713 5.447 0 7.945 0 10.49c0 1.666.713 3.283 1.998 4.448-.119.5-.19 1-.19 1.499 0 3.401 2.759 5.946 5.946 5.946.642 0 1.26-.095 1.88-.309a5.96 5.96 0 004.162 1.713z"/>
+          </svg>
+        </a>
+
+        <!-- 2. Codex (Pure inner glyph without outer background shape) -->
+        <a href="https://chatgpt.com/codex/"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="ai-logo-link"
+           aria-label="Codex"
+           title="Codex (chatgpt.com/codex)"
+           data-tooltip="Codex">
+          <svg viewBox="2 2.5 20 19" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+            <path d="M9.064 3.344a4.578 4.578 0 012.285-.312c1 .115 1.891.54 2.673 1.275.01.01.024.017.037.021a.09.09 0 00.043 0 4.55 4.55 0 013.046.275l.047.022.116.057a4.581 4.581 0 012.188 2.399c.209.51.313 1.041.315 1.595a4.24 4.24 0 01-.134 1.223.123.123 0 00.03.115c.594.607.988 1.33 1.183 2.17.289 1.425-.007 2.71-.887 3.854l-.136.166a4.548 4.548 0 01-2.201 1.388.123.123 0 00-.081.076c-.191.551-.383 1.023-.74 1.494-.9 1.187-2.222 1.846-3.711 1.838-1.187-.006-2.239-.44-3.157-1.302a.107.107 0 00-.105-.024c-.388.125-.78.143-1.204.138a4.441 4.441 0 01-1.945-.466 4.544 4.544 0 01-1.61-1.335c-.152-.202-.303-.392-.414-.617a5.81 5.81 0 01-.37-.961 4.582 4.582 0 01-.014-2.298.124.124 0 00.006-.056.085.085 0 00-.027-.048 4.467 4.467 0 01-1.034-1.651 3.896 3.896 0 01-.251-1.192 5.189 5.189 0 01.141-1.6c.337-1.112.982-1.985 1.933-2.618.212-.141.413-.251.601-.33.215-.089.43-.164.646-.227a.098.098 0 00.065-.066 4.51 4.51 0 01.829-1.615 4.535 4.535 0 011.837-1.388zm3.482 10.565a.637.637 0 000 1.272h3.636a.637.637 0 100-1.272h-3.636zM8.462 9.23a.637.637 0 00-1.106.631l1.272 2.224-1.266 2.136a.636.636 0 101.095.649l1.454-2.455a.636.636 0 00.005-.64L8.462 9.23z" fill="url(#vst-codex-grad)"/>
+            <defs>
+              <linearGradient gradientUnits="userSpaceOnUse" id="vst-codex-grad" x1="12" x2="12" y1="3" y2="21">
+                <stop stop-color="#C4BCFF"/>
+                <stop offset=".5" stop-color="#85A6FF"/>
+                <stop offset="1" stop-color="#4F58FF"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </a>
+
+        <!-- 3. Claude -->
+        <a href="https://claude.ai/"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="ai-logo-link"
+           aria-label="Claude"
+           title="Claude (claude.ai)"
+           data-tooltip="Claude">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+            <path d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z" fill="#E88260" fill-rule="nonzero"/>
+          </svg>
+        </a>
+
+        <!-- 4. Gemini -->
+        <a href="https://gemini.google.com/app"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="ai-logo-link"
+           aria-label="Gemini"
+           title="Gemini (gemini.google.com)"
+           data-tooltip="Gemini">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+            <path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="#3186FF"/>
+            <path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#vst-gemini-0)"/>
+            <path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#vst-gemini-1)"/>
+            <path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#vst-gemini-2)"/>
+            <defs>
+              <linearGradient gradientUnits="userSpaceOnUse" id="vst-gemini-0" x1="7" x2="11" y1="15.5" y2="12">
+                <stop stop-color="#08B962"/>
+                <stop offset="1" stop-color="#08B962" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient gradientUnits="userSpaceOnUse" id="vst-gemini-1" x1="8" x2="11.5" y1="5.5" y2="11">
+                <stop stop-color="#F94543"/>
+                <stop offset="1" stop-color="#F94543" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient gradientUnits="userSpaceOnUse" id="vst-gemini-2" x1="3.5" x2="17.5" y1="13.5" y2="12">
+                <stop stop-color="#FABC12"/>
+                <stop offset=".46" stop-color="#FABC12" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </a>
+
+        <!-- 5. Antigravity -->
+        <a href="https://antigravity.google/"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="ai-logo-link"
+           aria-label="Antigravity"
+           title="Antigravity (antigravity.google)"
+           data-tooltip="Antigravity">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+            <mask height="23" id="vst-ag-mask" maskUnits="userSpaceOnUse" width="24" x="0" y="1">
+              <path d="M21.751 22.607c1.34 1.005 3.35.335 1.508-1.508C17.73 15.74 18.904 1 12.037 1 5.17 1 6.342 15.74.815 21.1c-2.01 2.009.167 2.511 1.507 1.506 5.192-3.517 4.857-9.714 9.715-9.714 4.857 0 4.522 6.197 9.714 9.715z" fill="#fff"/>
+            </mask>
+            <g mask="url(#vst-ag-mask)">
+              <path d="M0 0h24v24H0z" fill="url(#vst-ag-grad)"/>
+              <circle cx="6" cy="5" r="7" fill="#FFE432" opacity="0.85"/>
+              <circle cx="19" cy="6" r="8" fill="#FC413D" opacity="0.85"/>
+              <circle cx="4" cy="14" r="8" fill="#00B95C" opacity="0.85"/>
+              <circle cx="16" cy="19" r="9" fill="#3186FF" opacity="0.9"/>
+            </g>
+            <defs>
+              <linearGradient id="vst-ag-grad" x1="0" y1="1" x2="24" y2="23" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#FFE432"/>
+                <stop offset="0.35" stop-color="#FC413D"/>
+                <stop offset="0.7" stop-color="#00B95C"/>
+                <stop offset="1" stop-color="#3186FF"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </a>
+
+        <!-- 6. Grok -->
+        <a href="https://grok.com/"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="ai-logo-link"
+           aria-label="Grok"
+           title="Grok (grok.com)"
+           data-tooltip="Grok">
+          <svg fill="#FFFFFF" fill-rule="evenodd" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+            <path d="M9.27 15.29l7.978-5.897c.391-.29.95-.177 1.137.272.98 2.369.542 5.215-1.41 7.169-1.951 1.954-4.667 2.382-7.149 1.406l-2.711 1.257c3.889 2.661 8.611 2.003 11.562-.953 2.341-2.344 3.066-5.539 2.388-8.42l.006.007c-.983-4.232.242-5.924 2.75-9.383.06-.082.12-.164.179-.248l-3.301 3.305v-.01L9.267 15.292M7.623 16.723c-2.792-2.67-2.31-6.801.071-9.184 1.761-1.763 4.647-2.483 7.166-1.425l2.705-1.25a7.808 7.808 0 00-1.829-1A8.975 8.975 0 005.984 5.83c-2.533 2.536-3.33 6.436-1.962 9.764 1.022 2.487-.653 4.246-2.34 6.022-.599.63-1.199 1.259-1.682 1.925l7.62-6.815"/>
+          </svg>
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <style>
+    #configureLinks { cursor:pointer; font-family:var(--font-khmer),sans-serif; }
+    .domain-pill .dot { display:none; }
+    .host-tag::before { box-shadow:none; border-radius:2px; }
+    dialog.modal-backdrop { display:none; width:100%; height:100%; max-width:none; max-height:none; margin:0; border:0; }
+    dialog.modal-backdrop[open] { display:flex; opacity:1; pointer-events:auto; }
+    .modal-dialog { max-height:calc(100dvh - 32px); overflow:auto; }
+    .link-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; font-size:14px; color:#C2CAE0; }
+    .link-field input,.link-field select { min-height:44px; padding:10px; border:1px solid #59647a; border-radius:8px; background:#0b101c; color:#fff; font-size:16px; width:100%; }
+    .modal-actions { flex-wrap:wrap; }
+    .modal-actions button,.modal-actions a { min-height:44px; display:inline-flex; align-items:center; text-decoration:none; }
+    #linkFeedback { min-height:22px; margin-top:12px; font-size:14px; color:#c8e6ce; }
+    #launchSaved[hidden] { display:none; }
+    .app-card.unconfigured .host-tag-text { color:#f4d583; }
+  </style>
+  <dialog class="modal-backdrop" id="appModal" aria-labelledby="modalTitle">
+    <div class="modal-dialog" id="modalDialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">កំណត់ Link កម្មវិធី</h3>
+        <button type="button" class="modal-close" id="modalCloseBtn">បិទ</button>
+      </div>
+      <label class="link-field" for="appChoice">កម្មវិធី<select id="appChoice"></select></label>
+      <p class="modal-note" id="modalNote"></p>
+      <form id="linkForm">
+      <label class="link-field" for="appUrl">Link កម្មវិធី<input type="url" id="appUrl" maxlength="1500" placeholder="https://…" autocomplete="off" spellcheck="false"></label>
+      <div class="modal-actions">
+        <button type="submit" class="btn-secondary">រក្សាទុក Link</button>
+        <button type="button" class="btn-secondary" id="clearLink">ដក Link</button>
+        <a class="btn-secondary" id="launchSaved" target="_blank" rel="noopener noreferrer" hidden>បើក Tab ថ្មី ↗</a>
+      </div>
+      </form><p id="linkFeedback" role="status" aria-live="polite"></p>
+      <button type="button" class="btn-secondary" id="logoutHub">ចាកចេញពីគណនី</button>
+    </div>
+  </dialog>
+
+  <script>
+    (function () {
+      const modal = document.getElementById('appModal');
+      const dialog = document.getElementById('modalDialog');
+      const noteEl = document.getElementById('modalNote');
+      const closeBtn = document.getElementById('modalCloseBtn');
+      const cards=[...document.querySelectorAll('.app-card')];
+      const choice=document.getElementById('appChoice'),input=document.getElementById('appUrl'),feedback=document.getElementById('linkFeedback'),launch=document.getElementById('launchSaved');
+      const defaults={'VST ERP':'https://vst-intelligence-dashboard.sethavann.chatgpt.site/','Khmer Voice Studio':'https://voice.vannsitha.com/','VST Downloader':'http://127.0.0.1:38473/','VST Sales Coach':'https://vst-sales-coach-ai.ai.studio/','AI Sale Studio':new URL('/sale-studio',location.origin).href,'Auto Post Tool':'','Kot Luy':'http://localhost:3000/','OpenClaw':'https://openclaw.139-180-143-33.sslip.io/chat/main'};
+      const key='vst-ecosystem-production-links-v1';
+      const urls={...defaults};
+      function safeUrl(value){try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:'';}catch{return '';}}
+      try{const saved=JSON.parse(localStorage.getItem(key));for(const name of Object.keys(defaults))if(typeof saved?.[name]==='string')urls[name]=safeUrl(saved[name]);}catch{}
+      function persist(){try{localStorage.setItem(key,JSON.stringify(urls));return true;}catch{return false;}}
+      function refreshCards(){for(const card of cards){const name=card.dataset.appTitle,url=urls[name];card.href=url||'#configure-links';card.classList.toggle('unconfigured',!url);card.setAttribute('aria-label',name+(url?' — បើក Tab ថ្មី':' — មិនទាន់ភ្ជាប់'));card.querySelector('.launch-cue').textContent=url?'បើក ↗':'ភ្ជាប់ +';if(url){card.target='_blank';card.rel='noopener noreferrer';}else{card.removeAttribute('target');card.removeAttribute('rel');}if(name==='Auto Post Tool')card.querySelector('.host-tag-text').textContent=url?'Web App':'មិនទាន់ភ្ជាប់';}}
+      function details(){const name=choice.value,card=cards.find(c=>c.dataset.appTitle===name);input.value=urls[name];input.setCustomValidity('');launch.hidden=!urls[name];if(urls[name])launch.href=urls[name];else launch.removeAttribute('href');dialog.style.setProperty('--modal-neon',card.dataset.appColor);noteEl.textContent=['VST Downloader','Kot Luy'].includes(name)?'ត្រូវបើកកម្មវិធីលើ Mac នេះជាមុន។ Link localhost មិនភ្ជាប់ពីទូរស័ព្ទទៅ Mac ដោយស្វ័យប្រវត្តិទេ។':'ចុច Card ដើម្បីបើកកម្មវិធីក្នុង Tab ថ្មី។ ផ្ទាំងមេនៅដដែល។';}
+      function openSettings(name){choice.value=name;feedback.textContent='';details();modal.showModal();}
+      function closeModal(){modal.close();}
+      for(const card of cards){const option=document.createElement('option');option.value=card.dataset.appTitle;option.textContent=card.dataset.appTitle;choice.append(option);card.addEventListener('click',e=>{if(!urls[card.dataset.appTitle]){e.preventDefault();openSettings(card.dataset.appTitle);}});}
+      document.getElementById('configureLinks').addEventListener('click',()=>openSettings('VST ERP'));
+      choice.addEventListener('change',()=>{feedback.textContent='';details();});
+      input.addEventListener('input',()=>input.setCustomValidity(''));
+      document.getElementById('linkForm').addEventListener('submit',e=>{e.preventDefault();const url=safeUrl(input.value.trim());if(!url){input.setCustomValidity('សូមដាក់ Link https:// ឬ http:// ត្រឹមត្រូវ');input.reportValidity();return;}urls[choice.value]=url;refreshCards();details();feedback.textContent=persist()?'បានរក្សាទុក Link ក្នុង Browser នេះ។':'បានកំណត់សម្រាប់ពេលនេះ។ Browser មិនអនុញ្ញាតឲ្យចងចាំ Link។';});
+      document.getElementById('clearLink').addEventListener('click',()=>{urls[choice.value]='';refreshCards();details();feedback.textContent=persist()?'បានដក Link។':'បានដក Link សម្រាប់ពេលនេះ។ Browser មិនអនុញ្ញាតឲ្យចងចាំការកែប្រែ។';});
+      closeBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+      document.getElementById('logoutHub').addEventListener('click',async()=>{try{const response=await fetch('/api/auth/logout',{method:'POST'});if(!response.ok)throw new Error();location.assign('/login');}catch{feedback.textContent='មិនអាចចាកចេញបាន។ សូមសាកម្ដងទៀត។';}});
+      refreshCards();
+    })();
+  </script>
+</body>
+</html>
