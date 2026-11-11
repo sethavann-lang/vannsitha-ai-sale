@@ -41,7 +41,7 @@ export default function LoginPage() {
 
       // Only permit our known local workspace as a return destination.
       const next = new URLSearchParams(window.location.search).get("next");
-      router.push(next === "/sale-studio" ? "/sale-studio" : "/");
+      router.push(next === "/sale-studio" || next === "/vst_downloader" ? next : "/");
       router.refresh();
     } catch {
       setError("មិនអាចភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើបានទេ សូមពិនិត្យអ៊ីនធឺណិត");
