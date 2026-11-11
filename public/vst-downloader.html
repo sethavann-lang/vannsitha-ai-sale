@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="km" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VST Downloader — Vann Sitha Trading</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ===== NEBULA GLASS // purple night sky + orange-volt accents ===== */
+    :root {
+      color-scheme: dark;
+      --bg: #08051c;
+      --bg-2: #120933;
+      --glass: rgba(24, 14, 58, 0.55);
+      --glass-strong: rgba(18, 10, 46, 0.78);
+      --glass-line: rgba(255, 255, 255, 0.09);
+      --purple: #8b5cf6;
+      --violet: #a855f7;
+      --pink: #ec4899;
+      --orange: #ff8a00;
+      --volt: #ffc53d;
+      --grad-cta: linear-gradient(100deg, #ff8a00 0%, #ff5f6d 55%, #ec4899 100%);
+      --grad-text: linear-gradient(95deg, #ffc53d 0%, #ff8a00 40%, #ec4899 100%);
+      --grad-edge: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(255, 255, 255, 0.06) 40%, rgba(255, 138, 0, 0.55));
+      --orange-glow: rgba(255, 138, 0, 0.45);
+      --violet-glow: rgba(168, 85, 247, 0.45);
+      --ok: #34d399;
+      --bad: #fb7185;
+      --text-main: #f5f3ff;
+      --text-muted: #b6aedb;
+      --text-sub: #7d74a8;
+      --r-lg: 22px;
+      --r-md: 14px;
+      --f-display: 'Sora', 'Kantumruy Pro', system-ui, sans-serif;
+      --f-body: 'Kantumruy Pro', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --f-num: 'Sora', 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--f-body); }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 60% 45% at 12% 8%, rgba(139, 92, 246, 0.38), transparent 70%),
+        radial-gradient(ellipse 45% 40% at 92% 22%, rgba(236, 72, 153, 0.26), transparent 70%),
+        radial-gradient(ellipse 55% 45% at 80% 95%, rgba(255, 138, 0, 0.16), transparent 70%),
+        radial-gradient(ellipse 70% 60% at 30% 80%, rgba(76, 29, 149, 0.35), transparent 70%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 1.5rem 1rem 3rem 1rem;
+      position: relative;
+    }
+    /* star field */
+    body::before, body::after {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-repeat: repeat;
+    }
+    body::before {
+      background-image:
+        radial-gradient(1px 1px at 20px 30px, #fff, transparent),
+        radial-gradient(1px 1px at 120px 80px, rgba(255,255,255,.8), transparent),
+        radial-gradient(1.5px 1.5px at 210px 160px, #fff, transparent),
+        radial-gradient(1px 1px at 300px 40px, rgba(255,255,255,.7), transparent),
+        radial-gradient(1px 1px at 60px 220px, rgba(255,255,255,.6), transparent),
+        radial-gradient(1.5px 1.5px at 260px 260px, rgba(255,214,150,.9), transparent);
+      background-size: 340px 300px;
+      opacity: .55;
+    }
+    body::after {
+      background-image:
+        radial-gradient(1.5px 1.5px at 80px 120px, #fff, transparent),
+        radial-gradient(1px 1px at 190px 30px, rgba(216,180,254,.9), transparent),
+        radial-gradient(2px 2px at 330px 210px, rgba(255,255,255,.9), transparent);
+      background-size: 420px 360px;
+      animation: twinkle 4s ease-in-out infinite;
+    }
+    @keyframes twinkle { 0%,100% { opacity: .25; } 50% { opacity: .9; } }
+
+    ::selection { background: var(--violet); color: #fff; }
+    :focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+
+    .container { width: 100%; max-width: 960px; display: flex; flex-direction: column; gap: 1.35rem; position: relative; z-index: 1; }
+
+    /* ---------- glass surface with gradient hairline ---------- */
+    .top-nav, .card, .tabs-bar, .task-card, .stat-tile, .media-card-wrap {
+      position: relative;
+      background: var(--glass);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      border: 1px solid transparent;
+      border-radius: var(--r-lg);
+      box-shadow: 0 20px 50px rgba(5, 2, 20, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .top-nav::before, .card::before, .tabs-bar::before, .task-card::before, .stat-tile::before, .media-card-wrap::before {
+      content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+      background: var(--grad-edge);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+
+    /* ---------- top nav ---------- */
+    .top-nav { padding: 0.8rem 1.15rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; border-radius: 20px; }
+    .brand { display: flex; align-items: center; gap: 0.85rem; }
+    .logo-badge {
+      width: 54px; height: 54px; flex-shrink: 0; background: #fff; border-radius: 15px;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.6), 0 0 22px var(--violet-glow);
+    }
+    .logo-badge img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-title { display: flex; flex-direction: column; gap: 0.1rem; }
+    .brand-title h1 {
+      font-family: var(--f-display); font-size: 1.28rem; font-weight: 700; letter-spacing: -0.01em;
+      display: flex; align-items: center; gap: 0.55rem; color: var(--text-main);
+    }
+    .glitch-text { font-family: inherit; }
+    .mac-badge {
+      font-family: var(--f-body); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.02em;
+      background: rgba(168, 85, 247, 0.18); border: 1px solid rgba(168, 85, 247, 0.45);
+      color: #e9d5ff; padding: 0.12rem 0.5rem; border-radius: 999px;
+    }
+    .brand-title p { font-size: 0.78rem; color: var(--text-muted); }
+    .nav-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+    .lang-switcher { display: flex; background: rgba(8, 5, 28, 0.6); border: 1px solid var(--glass-line); border-radius: 999px; padding: 0.2rem; gap: 0.15rem; }
+    .lang-btn {
+      background: transparent; border: none; color: var(--text-muted); font-size: 0.75rem; font-weight: 600;
+      padding: 0.38rem 0.75rem; border-radius: 999px; cursor: pointer; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s;
+    }
+    .lang-btn:hover { color: var(--text-main); }
+    .lang-btn.active { background: var(--grad-cta); color: #fff; box-shadow: 0 4px 14px var(--orange-glow); }
+
+    .btn-icon-text {
+      display: flex; align-items: center; gap: 0.45rem;
+      background: rgba(255, 255, 255, 0.06); border: 1px solid var(--glass-line); color: var(--text-main);
+      padding: 0.5rem 0.95rem; border-radius: 999px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-icon-text:hover { background: rgba(168, 85, 247, 0.18); border-color: rgba(168, 85, 247, 0.5); box-shadow: 0 0 16px var(--violet-glow); }
+
+    /* ---------- tabs ---------- */
+    .tabs-bar { display: flex; padding: 0.35rem; gap: 0.3rem; border-radius: 18px; }
+    .tab-item {
+      flex: 1; background: transparent; border: none; color: var(--text-muted);
+      padding: 0.7rem 0.8rem; border-radius: 13px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; position: relative; z-index: 1;
+    }
+    .tab-item:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.04); }
+    .tab-item.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.55), rgba(236, 72, 153, 0.35));
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35), inset 0 1px 0 rgba(255,255,255,.15);
+    }
+
+    /* ---------- hero ---------- */
+    .hero {
+      display: grid; grid-template-columns: 1.15fr 0.85fr; align-items: center; gap: 1.5rem;
+      padding: 1.25rem 0.5rem 0.25rem;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.74rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #e9d5ff; background: rgba(168, 85, 247, 0.14); border: 1px solid rgba(168, 85, 247, 0.35);
+      padding: 0.3rem 0.75rem; border-radius: 999px; margin-bottom: 1rem;
+    }
+    .hero-title {
+      font-family: var(--f-display); font-weight: 800; font-size: clamp(2.1rem, 5.4vw, 3.4rem);
+      line-height: 1.05; letter-spacing: -0.03em; color: #fff; margin-bottom: 1rem; text-wrap: balance;
+    }
+    .hero-title .grad {
+      background: var(--grad-text); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 18px rgba(255, 138, 0, 0.35));
+    }
+    .hero-sub { font-size: 0.98rem; line-height: 1.7; color: var(--text-muted); max-width: 46ch; margin-bottom: 1.4rem; }
+    .hero-cta { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+    .btn-hero, .btn-ghost {
+      border-radius: 999px; padding: 0.8rem 1.4rem; font-size: 0.92rem; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.5rem; transition: transform .15s, box-shadow .2s, background .2s;
+    }
+    .btn-hero { background: var(--grad-cta); color: #fff; border: none; box-shadow: 0 10px 28px var(--orange-glow); }
+    .btn-hero:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(255, 95, 109, 0.5); }
+    .btn-ghost { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.18); }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.1); }
+
+    .hero-art { position: relative; width: 100%; max-width: 340px; aspect-ratio: 1 / 0.92; justify-self: center; }
+    .hero-art svg { width: 100%; height: 100%; overflow: visible; }
+    .float-a { animation: floatY 6s ease-in-out infinite; }
+    .float-b { animation: floatY 5s ease-in-out infinite reverse; }
+    .float-c { animation: floatY 7s ease-in-out infinite 1s; }
+    .spin-slow { transform-origin: 170px 150px; animation: spin 26s linear infinite; }
+    .spin-rev { transform-origin: 170px 150px; animation: spin 38s linear infinite reverse; }
+    @keyframes floatY { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* ---------- stats ---------- */
+    .stats-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
+    .stat-tile { padding: 0.9rem 1rem; display: flex; align-items: center; gap: 0.8rem; border-radius: 18px; }
+    .stat-icon {
+      width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; display: grid; place-items: center; color: #fff;
+      box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35);
+    }
+    .stat-icon svg { width: 20px; height: 20px; }
+    .si-1 { background: linear-gradient(135deg, #a855f7, #6366f1); }
+    .si-2 { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+    .si-3 { background: linear-gradient(135deg, #ff8a00, #ffc53d); }
+    .si-4 { background: linear-gradient(135deg, #22d3ee, #6366f1); }
+    .stat-num { font-family: var(--f-num); font-size: 1.15rem; font-weight: 800; line-height: 1.1; color: #fff; font-variant-numeric: tabular-nums; }
+    .stat-lbl { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* ---------- main card ---------- */
+    .card { padding: 1.85rem; }
+    .input-hero { display: flex; flex-direction: column; gap: 1.15rem; }
+
+    /* border beam on link input */
+    @property --beam-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+    @keyframes beam-spin { to { --beam-angle: 360deg; } }
+
+    .input-box-wrapper {
+      position: relative; display: flex; align-items: center; isolation: isolate;
+      padding: 2px; border-radius: 18px;
+      background: conic-gradient(from var(--beam-angle),
+        rgba(168,85,247,0.18) 0deg, rgba(168,85,247,0.18) 230deg,
+        var(--violet) 280deg, var(--pink) 315deg, var(--orange) 340deg, #ffe7a8 352deg, rgba(168,85,247,0.18) 360deg);
+      animation: beam-spin 4.5s linear infinite;
+    }
+    .input-box-wrapper::before {
+      content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+      background: inherit; filter: blur(12px); opacity: 0.7;
+    }
+    .input-icon-left { position: absolute; left: 1.15rem; color: #c4b5fd; pointer-events: none; display: flex; align-items: center; z-index: 2; }
+    .input-field {
+      position: relative; width: 100%; background: #0c0726; border: none; border-radius: 16px;
+      padding: 1.15rem 7.5rem 1.15rem 3.1rem; color: #fff; font-size: 0.98rem; outline: none; transition: box-shadow .25s;
+    }
+    .input-field::placeholder { color: var(--text-sub); }
+    .input-field:focus { box-shadow: inset 0 0 0 1px rgba(255, 197, 61, 0.55); }
+    .input-actions-right { position: absolute; right: 0.65rem; display: flex; align-items: center; gap: 0.35rem; z-index: 2; }
+    .btn-paste-pill {
+      background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); color: #fff;
+      padding: 0.55rem 0.95rem; border-radius: 999px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s;
+    }
+    .btn-paste-pill:hover { background: rgba(168, 85, 247, 0.28); border-color: rgba(168, 85, 247, 0.55); }
+
+    /* platforms */
+    .platforms-title { font-size: 0.76rem; color: var(--text-sub); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 0.55rem; }
+    .platforms-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 0.6rem; }
+    .platform-card {
+      background: rgba(255, 255, 255, 0.035); border: 1px solid var(--glass-line); border-radius: var(--r-md);
+      padding: 0.6rem 0.7rem; display: flex; align-items: center; gap: 0.6rem;
+      font-size: 0.8rem; font-weight: 500; color: var(--text-muted); transition: all 0.2s;
+    }
+    .platform-card:hover { border-color: rgba(168, 85, 247, 0.5); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.25); }
+    .platform-card svg {
+      width: 30px; height: 30px; flex-shrink: 0; padding: 6px; border-radius: 9px;
+      background: rgba(255, 255, 255, 0.07); box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+    }
+
+    /* CTAs */
+    .btn-main-action, .btn-download-start {
+      width: 100%; border: none; padding: 1.05rem; border-radius: 999px; cursor: pointer;
+      font-size: 1.02rem; font-weight: 700; color: #fff;
+      display: flex; justify-content: center; align-items: center; gap: 0.6rem;
+      transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+    }
+    .btn-main-action { background: linear-gradient(100deg, #7c3aed, #a855f7 50%, #ec4899); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.45); }
+    .btn-download-start { background: var(--grad-cta); box-shadow: none; }
+    .btn-main-action:hover, .btn-download-start:hover { transform: translateY(-1.5px); filter: brightness(1.08); }
+    .btn-main-action:active, .btn-download-start:active { transform: translateY(1px); }
+    .btn-main-action:disabled, .btn-download-start:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .beam-wrap {
+      padding: 2px; border-radius: 999px;
+      background: conic-gradient(from var(--beam-angle),
+        rgba(255,138,0,0.25) 0deg, rgba(255,138,0,0.25) 230deg,
+        var(--volt) 290deg, #ffffff 330deg, var(--pink) 350deg, rgba(255,138,0,0.25) 360deg);
+      animation: beam-spin 3s linear infinite;
+      box-shadow: 0 12px 34px var(--orange-glow);
+    }
+
+    /* preview */
+    .preview-box {
+      display: none; flex-direction: column; gap: 1.35rem;
+      margin-top: 1.35rem; padding-top: 1.35rem; border-top: 1px solid var(--glass-line);
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .media-card-wrap { display: flex; gap: 1.25rem; padding: 1rem; border-radius: 18px; flex-wrap: wrap; background: rgba(12, 7, 38, 0.55); }
+    .thumb-holder {
+      width: 180px; height: 105px; border-radius: 14px; overflow: hidden; background: #0c0726; flex-shrink: 0; position: relative;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(168, 85, 247, 0.4);
+    }
+    .thumb-holder img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-duration {
+      position: absolute; bottom: 6px; right: 6px; background: rgba(8, 5, 28, 0.85); color: #fff;
+      font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.15);
+    }
+    .media-info-text { display: flex; flex-direction: column; justify-content: center; gap: 0.45rem; overflow: hidden; min-width: 0; }
+    .media-title-text {
+      font-size: 1.05rem; font-weight: 600; line-height: 1.4; color: #fff;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .media-meta-text { font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; }
+
+    /* quality */
+    .quality-options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.65rem; }
+    .quality-btn {
+      background: rgba(255, 255, 255, 0.035); border: 1px solid var(--glass-line); border-radius: var(--r-md);
+      padding: 0.8rem 0.95rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.2rem; transition: all 0.2s;
+    }
+    .quality-btn:hover { border-color: rgba(168, 85, 247, 0.5); background: rgba(168, 85, 247, 0.08); }
+    .quality-btn.active {
+      background: linear-gradient(135deg, rgba(255, 138, 0, 0.18), rgba(236, 72, 153, 0.14));
+      border-color: rgba(255, 138, 0, 0.7);
+      box-shadow: 0 0 20px rgba(255, 138, 0, 0.25);
+    }
+    .quality-label { font-size: 0.88rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 0.4rem; }
+    .quality-desc { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* tasks */
+    .task-card { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; border-radius: 18px; }
+    .task-top { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
+    .task-title { font-size: 0.92rem; font-weight: 600; color: #fff; max-width: 75%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .task-status-pill {
+      font-size: 0.78rem; font-weight: 700; color: var(--volt);
+      background: rgba(255, 197, 61, 0.12); border: 1px solid rgba(255, 197, 61, 0.35); padding: 0.18rem 0.65rem; border-radius: 999px;
+    }
+    .task-progress-track { width: 100%; height: 10px; background: rgba(255, 255, 255, 0.07); border-radius: 999px; overflow: hidden; position: relative; }
+    .task-progress-fill {
+      height: 100%; width: 0%; border-radius: 999px;
+      background: linear-gradient(90deg, #8b5cf6, #ec4899 50%, #ff8a00 80%, #ffc53d);
+      box-shadow: 0 0 14px rgba(236, 72, 153, 0.55); transition: width 0.25s ease;
+    }
+    .task-metrics { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); }
+    .task-actions { display: flex; gap: 0.6rem; margin-top: 0.25rem; }
+
+    /* views */
+    .view-section { display: none; flex-direction: column; gap: 1.25rem; }
+    .view-section.active { display: flex; }
+
+    .history-item {
+      display: flex; justify-content: space-between; align-items: center; gap: .75rem;
+      background: rgba(255, 255, 255, 0.035); border: 1px solid var(--glass-line); border-radius: var(--r-md);
+      padding: 0.85rem 1.15rem; transition: all 0.2s;
+    }
+    .history-item:hover { border-color: rgba(168, 85, 247, 0.45); background: rgba(168, 85, 247, 0.07); }
+    .history-item span[style] { background: rgba(168, 85, 247, 0.16) !important; color: #e9d5ff !important; border-radius: 999px !important; }
+    .history-name { font-size: 0.9rem; font-weight: 500; color: #fff; max-width: 65%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .setting-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--glass-line); }
+    .setting-info h4 { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.2rem; color: #fff; }
+    .setting-info p { font-size: 0.78rem; color: var(--text-muted); }
+
+    .status-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok);
+      margin-right: 0.4rem; box-shadow: 0 0 8px var(--ok); animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse { 50% { opacity: .4; } }
+
+    .spinner {
+      display: inline-block; width: 18px; height: 18px; border-radius: 50%;
+      border: 2.5px solid rgba(255, 255, 255, 0.3); border-top-color: #fff; animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #2b1d5c; border-radius: 999px; border: 2px solid var(--bg); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--violet); }
+
+    @media (max-width: 760px) {
+      .hero { grid-template-columns: 1fr; text-align: left; }
+      .hero-art { max-width: 260px; order: -1; }
+      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card { padding: 1.25rem; }
+      .tab-item { font-size: 0.8rem; padding: 0.6rem 0.4rem; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+.mac-connection{display:flex;gap:18px;align-items:center;justify-content:space-between;margin:18px 0;padding:18px 22px;border:1px solid #ff9a3d66;border-radius:18px;background:linear-gradient(120deg,#241333d9,#101024e8);box-shadow:0 0 24px #ff6b0012}.mac-connection strong{color:#ffbc69}.mac-connection p{margin:7px 0 0;max-width:720px;font-size:.85rem;line-height:1.8;color:#c2cae0}.mac-actions{display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0}.mac-actions a{text-decoration:none}.mac-connection[data-connected="true"]{border-color:#34d39980}.mac-connection[data-connected="true"] strong{color:#34d399}@media(max-width:850px){.mac-connection{align-items:flex-start;flex-direction:column}.mac-actions{flex-shrink:1}}
+</style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Nav Bar -->
+    <div class="top-nav">
+      <div class="brand">
+        <div class="logo-badge">
+          <img src="/logo.png" alt="Vann Sitha Trading Logo" width="56" height="56">
+        </div>
+        <div class="brand-title">
+          <h1><span class="glitch-text" data-text="VST Downloader">VST Downloader</span> <span class="mac-badge">macOS</span></h1>
+          <p id="lblSubTitle">ទាញយកវីដេអូ & សម្លេងកម្រិតច្បាស់ខ្ពស់</p>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Language Switcher -->
+        <div class="lang-switcher">
+          <button class="lang-btn active" id="btnLangKm" onclick="setLanguage('km')">
+            <span>🇰🇭</span> <span>ខ្មែរ</span>
+          </button>
+          <button class="lang-btn" id="btnLangEn" onclick="setLanguage('en')">
+            <span>🇬🇧</span> <span>English</span>
+          </button>
+        </div>
+
+        <!-- Open Folder Button -->
+        <button class="btn-icon-text" onclick="openDownloadsFolder()" title="Open Downloads in Finder">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          <span id="btnOpenFolderText">បើក Folder</span>
+        </button>
+      </div>
+    </div>
+
+    <section class="mac-connection" aria-label="Mac connection">
+      <div><strong id="macStatus" role="status" aria-live="polite">រួចរាល់សម្រាប់ភ្ជាប់ Mac</strong>
+      <p id="macHelp">ចុច «ភ្ជាប់ Mac» ហើយអនុញ្ញាតការភ្ជាប់ទៅកម្មវិធីក្នុងម៉ាស៊ីន ប្រសិនបើ Browser សួរ។ ឯកសាររក្សាទុកក្នុង Downloads → CPS Downloads លើ Mac នេះ។</p></div>
+      <div class="mac-actions"><button class="btn-icon-text" id="connectMac" onclick="connectMac()">ភ្ជាប់ Mac</button><a class="btn-icon-text" href="/">← AI Ecosystem</a><a class="btn-icon-text" href="http://127.0.0.1:38473/" target="_blank" rel="noopener noreferrer">បើកផ្ទាល់លើ Mac ↗</a></div>
+    </section>
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-item active" id="tabDownloader" onclick="switchTab('downloader')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span id="tabDownloaderText">ទាញយក (Downloader)</span>
+      </button>
+      <button class="tab-item" id="tabHistory" onclick="switchTab('history')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span id="tabHistoryText">ប្រវត្តិ (History)</span>
+      </button>
+      <button class="tab-item" id="tabSettings" onclick="switchTab('settings')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span id="tabSettingsText">ការកំណត់ (Settings)</span>
+      </button>
+    </div>
+
+    <!-- VIEW 1: DOWNLOADER -->
+    <div class="view-section active" id="viewDownloader">
+      <!-- Hero -->
+      <section class="hero">
+        <div class="hero-text">
+          <span class="eyebrow">✦ VST Universal Downloader</span>
+          <h2 class="hero-title">Download.<br>Convert. <span class="grad">Enjoy.</span></h2>
+          <p class="hero-sub" id="lblHeroSub">ទាញយកវីដេអូពី YouTube, TikTok, Facebook, Instagram និងច្រើនទៀត បានក្នុងពីរបីវិនាទី ច្បាស់រហូតដល់ 4K និងគ្មាន Logo។</p>
+          <div class="hero-cta">
+            <button class="btn-hero" type="button" onclick="const i=document.getElementById('urlInput');i.scrollIntoView({behavior:'smooth',block:'center'});i.focus();">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span id="btnHeroStart">ចាប់ផ្ដើមទាញយក</span>
+            </button>
+            <button class="btn-ghost" type="button" onclick="switchTab('history')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span id="btnHeroHistory">មើលប្រវត្តិ</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 340 312">
+            <defs>
+              <radialGradient id="hgGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ec4899" stop-opacity=".55"/>
+                <stop offset="45%" stop-color="#8b5cf6" stop-opacity=".35"/>
+                <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="hgTile" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#a855f7"/>
+                <stop offset="55%" stop-color="#ec4899"/>
+                <stop offset="100%" stop-color="#ff8a00"/>
+              </linearGradient>
+              <linearGradient id="hgShine" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fff" stop-opacity=".55"/>
+                <stop offset="45%" stop-color="#fff" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="hgRing" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#ffc53d" stop-opacity="0"/>
+                <stop offset="50%" stop-color="#ffc53d"/>
+                <stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="hgBase" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#8b5cf6" stop-opacity=".55"/>
+                <stop offset="100%" stop-color="#1e1052" stop-opacity=".2"/>
+              </linearGradient>
+            </defs>
+
+            <circle cx="170" cy="150" r="150" fill="url(#hgGlow)"/>
+
+            <!-- orbit rings -->
+            <g class="spin-slow">
+              <ellipse cx="170" cy="150" rx="140" ry="52" fill="none" stroke="url(#hgRing)" stroke-width="2" transform="rotate(-18 170 150)"/>
+              <circle cx="300" cy="108" r="5" fill="#ffc53d"/>
+            </g>
+            <g class="spin-rev">
+              <ellipse cx="170" cy="150" rx="118" ry="118" fill="none" stroke="#a855f7" stroke-opacity=".28" stroke-width="1" stroke-dasharray="3 9"/>
+              <circle cx="52" cy="150" r="3.5" fill="#ec4899"/>
+            </g>
+
+            <!-- pedestal -->
+            <ellipse cx="170" cy="262" rx="92" ry="20" fill="url(#hgBase)"/>
+            <ellipse cx="170" cy="258" rx="70" ry="13" fill="none" stroke="#ffc53d" stroke-opacity=".6" stroke-width="1.5"/>
+
+            <!-- main app tile -->
+            <g class="float-a">
+              <rect x="108" y="78" width="124" height="124" rx="34" fill="url(#hgTile)"/>
+              <rect x="108" y="78" width="124" height="124" rx="34" fill="url(#hgShine)"/>
+              <rect x="108.5" y="78.5" width="123" height="123" rx="33.5" fill="none" stroke="#fff" stroke-opacity=".35"/>
+              <path d="M170 106 v52 M148 138 l22 22 22-22" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="140" y="170" width="60" height="9" rx="4.5" fill="#fff"/>
+            </g>
+
+            <!-- floating platform chips -->
+            <g class="float-b">
+              <rect x="22" y="62" width="62" height="42" rx="13" fill="#1a0f40" stroke="#a855f7" stroke-opacity=".55"/>
+              <rect x="34" y="73" width="28" height="20" rx="6" fill="#ef4444"/>
+              <path d="M45 78 l8 5 -8 5z" fill="#fff"/>
+              <rect x="66" y="80" width="10" height="6" rx="3" fill="#fff" fill-opacity=".5"/>
+            </g>
+            <g class="float-c">
+              <rect x="252" y="176" width="66" height="44" rx="14" fill="#1a0f40" stroke="#ec4899" stroke-opacity=".6"/>
+              <text x="285" y="204" text-anchor="middle" font-family="Sora, sans-serif" font-weight="800" font-size="16" fill="#ffc53d">4K</text>
+            </g>
+            <g class="float-a">
+              <rect x="30" y="200" width="58" height="40" rx="13" fill="#1a0f40" stroke="#ff8a00" stroke-opacity=".6"/>
+              <path d="M52 210 v14 a5 5 0 1 1 -3 -4.6 V210 l12 -3 v13 a5 5 0 1 1 -3 -4.6 V211z" fill="#ff8a00"/>
+            </g>
+
+            <!-- sparkles -->
+            <path d="M268 50 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3z" fill="#fff"/>
+            <path d="M84 30 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" fill="#ffc53d"/>
+            <path d="M314 262 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" fill="#e9d5ff"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-tile">
+          <div class="stat-icon si-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div>
+          <div><div class="stat-num">6+</div><div class="stat-lbl">Platforms</div></div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon si-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="m10 9 5 3-5 3z" fill="currentColor"/></svg></div>
+          <div><div class="stat-num">4K</div><div class="stat-lbl">Ultra HD Video</div></div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon si-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+          <div><div class="stat-num">320k</div><div class="stat-lbl">MP3 Audio</div></div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon si-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <div><div class="stat-num">0</div><div class="stat-lbl">Logo / Watermark</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="input-hero">
+          <div class="input-box-wrapper">
+            <div class="input-icon-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            </div>
+            <input type="text" id="urlInput" class="input-field" placeholder="Paste Link វីដេអូនៅទីនេះ (YouTube, TikTok, Facebook, Instagram...)" autofocus>
+            <div class="input-actions-right">
+              <button class="btn-paste-pill" onclick="pasteClipboard()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                <span id="btnPasteText">Paste</span>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-main-action" id="btnAnalyze" onclick="handleAnalyze()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span id="btnAnalyzeText">វិភាគ Link (Analyze Video)</span>
+          </button>
+
+          <!-- Platforms Supported -->
+          <div>
+            <div class="platforms-title" id="lblSupportedPlatforms">បណ្ដាញសង្គមដែលគាំទ្រ (Supported Platforms):</div>
+            <div class="platforms-grid">
+              <div class="platform-card">
+                <svg viewBox="0 0 24 24" fill="#ef4444"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                <span>YouTube 4K/HD</span>
+              </div>
+              <div class="platform-card">
+                <svg viewBox="0 0 24 24" fill="#06b6d4"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                <span>TikTok (No Logo)</span>
+              </div>
+              <div class="platform-card">
+                <svg viewBox="0 0 24 24" fill="#3b82f6"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                <span>Facebook Reels</span>
+              </div>
+              <div class="platform-card">
+                <svg viewBox="0 0 24 24" fill="#ec4899"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                <span>Instagram</span>
+              </div>
+              <div class="platform-card">
+                <svg viewBox="0 0 24 24" fill="#a855f7"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                <span>X / Twitter</span>
+              </div>
+              <div class="platform-card">
+                <svg viewBox="0 0 24 24" fill="#10b981"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                <span>Douyin / More</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="preview-box" id="previewCard">
+          <div class="media-card-wrap">
+            <div class="thumb-holder">
+              <img id="thumbImg" src="" alt="Thumbnail">
+              <span class="thumb-duration" id="thumbDuration">00:00</span>
+            </div>
+            <div class="media-info-text">
+              <div class="media-title-text" id="mediaTitle">Video Title</div>
+              <div class="media-meta-text">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span id="mediaUploader">Creator</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.6rem; color: #f6ecdc;" id="lblSelectQuality">
+              ជ្រើសរើសកម្រិតគុណភាព (Select Quality):
+            </div>
+            <div class="quality-options-grid" id="qualityGrid"></div>
+          </div>
+
+          <div class="beam-wrap">
+          <button class="btn-download-start" id="btnDownload" onclick="handleDownload()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span id="btnDownloadText">ទាញយកឥឡូវនេះ (Download Now)</span>
+          </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Downloads Card -->
+      <div id="activeTasksSection" style="display: none; flex-direction: column; gap: 0.85rem;">
+        <h3 style="font-size: 1.05rem; font-weight: 600;" id="lblActiveDownloads">កំពុងទាញយក (Active Downloads)</h3>
+        <div id="tasksContainer" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: HISTORY -->
+    <div class="view-section" id="viewHistory">
+      <div class="card">
+        <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;" id="lblHistoryTitle">ប្រវត្តិទាញយក (Download History)</h3>
+        <div id="historyList" style="display: flex; flex-direction: column; gap: 0.6rem;">
+          <p style="color: var(--text-muted); font-size: 0.88rem;" id="lblNoHistory">មិនទាន់មានប្រវត្តិទាញយកនៅឡើយទេ។ (No downloads yet.)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: SETTINGS -->
+    <div class="view-section" id="viewSettings">
+      <div class="card">
+        <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;" id="lblSettingsTitle">ការកំណត់ប្រព័ន្ធ (System Settings)</h3>
+        
+        <div class="setting-row">
+          <div class="setting-info">
+            <h4 id="lblSettingFolder">ថតរក្សាទុក (Downloads Directory)</h4>
+            <p id="lblSettingFolderPath">~/Downloads/CPS Downloads</p>
+          </div>
+          <button class="btn-icon-text" onclick="openDownloadsFolder()">
+            <span id="btnExplore">បើកមើល (Browse)</span>
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <h4 id="lblEngineStatus">ស្ថានភាពម៉ាស៊ីន (Engine Status)</h4>
+            <p id="lblEngineDesc"><span class="status-dot"></span> yt-dlp & ffmpeg ដំណើរការលើ Apple Silicon ARM64</p>
+          </div>
+          <span style="font-size: 0.78rem; color: #34d399; font-weight: 600; text-shadow: 0 0 8px rgba(52,211,153,.5);">Active & Ready</span>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <h4 id="lblMaxSpeed">ល្បឿនទាញយក (Download Performance)</h4>
+            <p id="lblMaxSpeedDesc">ប្រើប្រាស់ Multi-threading និងបណ្ដាញល្បឿនលឿនអតិបរមា</p>
+          </div>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Unthrottled</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function escapeMarkup(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    const MAC_ORIGIN='http://127.0.0.1:38473';
+    let macConnected=false;
+    let connectingMac=null;
+    async function connectMac(){
+      if(connectingMac)return connectingMac;
+      connectingMac=(async()=>{
+        const button=document.getElementById('connectMac');
+        const status=document.getElementById('macStatus');
+        const help=document.getElementById('macHelp');
+        button.disabled=true;status.textContent='កំពុងភ្ជាប់ Mac…';
+        try{
+          const response=await fetch(MAC_ORIGIN+'/api/status',{mode:'cors',credentials:'omit',targetAddressSpace:'loopback',signal:AbortSignal.timeout(8000)});
+          const data=await response.json();
+          if(!response.ok||!data.ok)throw new Error('Mac unavailable');
+          macConnected=true;
+          status.textContent='បានភ្ជាប់ Mac • រួចរាល់សម្រាប់ទាញយក';
+          help.textContent='វីដេអូ និងសំឡេងទាញយកលើ Mac នេះ ហើយរក្សាទុកក្នុង Downloads → CPS Downloads។ ទុក Mac ឲ្យបើករហូតដល់ទាញយកចប់។';
+          document.querySelector('.mac-connection').dataset.connected='true';
+          button.textContent='ពិនិត្យការភ្ជាប់';
+          return true;
+        }catch{
+          macConnected=false;
+          status.textContent='មិនទាន់ភ្ជាប់ Mac';
+          help.textContent='សូមបើក VST Downloader លើ Mac នេះ ហើយចុច «ភ្ជាប់ Mac» ម្តងទៀត។ បើបានបដិសេធការអនុញ្ញាត សូមអនុញ្ញាត Local network / Loopback access ក្នុងការកំណត់ Website របស់ Browser។ កម្មវិធីនេះត្រូវប្រើលើ Mac ដែលមាន Downloader។';
+          document.querySelector('.mac-connection').dataset.connected='false';
+          button.textContent='ភ្ជាប់ Mac ម្តងទៀត';
+          return false;
+        }finally{button.disabled=false;connectingMac=null;}
+      })();
+      return connectingMac;
+    }
+    async function macFetch(path,options={}){
+      if(!macConnected&&!await connectMac())throw new Error('សូមភ្ជាប់ Mac មុនប្រើកម្មវិធី។');
+      try{return await fetch(MAC_ORIGIN+path,{...options,mode:'cors',credentials:'omit',targetAddressSpace:'loopback'});}
+      catch(error){macConnected=false;document.getElementById('macStatus').textContent='ការភ្ជាប់ Mac បានផ្អាក • សូមភ្ជាប់ម្តងទៀត';throw error;}
+    }
+
+    // Translations Dictionary (Khmer & English)
+    const i18n = {
+      km: {
+        subTitle: "ទាញយកវីដេអូ & សម្លេងកម្រិតច្បាស់ខ្ពស់",
+        openFolder: "បើក Folder",
+        tabDownloader: "ទាញយក (Downloader)",
+        tabHistory: "ប្រវត្តិ (History)",
+        tabSettings: "ការកំណត់ (Settings)",
+        placeholder: "Paste Link វីដេអូនៅទីនេះ (YouTube, TikTok, Facebook, Instagram...)",
+        paste: "Paste",
+        analyzeBtn: "វិភាគ Link (Analyze Video)",
+        analyzing: "កំពុងវិភាគព័ត៌មាន...",
+        supportedPlatforms: "បណ្ដាញសង្គមដែលគាំទ្រ (Supported Platforms):",
+        selectQuality: "ជ្រើសរើសកម្រិតគុណភាព (Select Quality):",
+        downloadNow: "ទាញយកឥឡូវនេះ (Download Now)",
+        starting: "កំពុងចាប់ផ្ដើម...",
+        activeDownloads: "កំពុងទាញយក (Active Downloads)",
+        downloadHistory: "ប្រវត្តិទាញយក (Download History)",
+        noHistory: "មិនទាន់មានប្រវត្តិទាញយកនៅឡើយទេ។",
+        systemSettings: "ការកំណត់ប្រព័ន្ធ (System Settings)",
+        settingFolder: "ថតរក្សាទុក (Downloads Directory)",
+        explore: "បើកមើល (Browse)",
+        engineStatus: "ស្ថានភាពម៉ាស៊ីន (Engine Status)",
+        engineDesc: "yt-dlp & ffmpeg ដំណើរការលើ Apple Silicon ARM64",
+        performance: "ល្បឿនទាញយក (Download Performance)",
+        performanceDesc: "ប្រើប្រាស់ Multi-threading និងបណ្ដាញល្បឿនលឿនអតិបរមា",
+        openInFinder: "បើកក្នុង Finder",
+        done: "ជោគជ័យ (Done)!",
+        failed: "បរាជ័យ (Failed)",
+        merging: "កំពុងបម្លែង (Merging)...",
+        connecting: "កំពុងតភ្ជាប់...",
+        speed: "ល្បឿន",
+        eta: "នៅសល់",
+        bestQuality: "Best (ច្បាស់បំផុត)",
+        mp3Audio: "MP3 Audio (សម្លេង)",
+        heroSub: "ទាញយកវីដេអូពី YouTube, TikTok, Facebook, Instagram និងច្រើនទៀត បានក្នុងពីរបីវិនាទី ច្បាស់រហូតដល់ 4K និងគ្មាន Logo។",
+        heroStart: "ចាប់ផ្ដើមទាញយក",
+        heroHistory: "មើលប្រវត្តិ"
+      },
+      en: {
+        subTitle: "Ultra-fast Video & Audio Downloader",
+        openFolder: "Open Folder",
+        tabDownloader: "Downloader",
+        tabHistory: "History",
+        tabSettings: "Settings",
+        placeholder: "Paste video link here (YouTube, TikTok, Facebook, Instagram...)",
+        paste: "Paste",
+        analyzeBtn: "Analyze Video",
+        analyzing: "Analyzing metadata...",
+        supportedPlatforms: "Supported Platforms:",
+        selectQuality: "Select Quality:",
+        downloadNow: "Download Now",
+        starting: "Starting download...",
+        activeDownloads: "Active Downloads",
+        downloadHistory: "Download History",
+        noHistory: "No download history found.",
+        systemSettings: "System Settings",
+        settingFolder: "Downloads Directory",
+        explore: "Browse",
+        engineStatus: "Engine Status",
+        engineDesc: "yt-dlp & ffmpeg native on Apple Silicon ARM64",
+        performance: "Download Performance",
+        performanceDesc: "Multi-threaded maximum unthrottled bandwidth",
+        openInFinder: "Show in Finder",
+        done: "Complete!",
+        failed: "Failed",
+        merging: "Merging formats...",
+        connecting: "Connecting...",
+        speed: "Speed",
+        eta: "ETA",
+        bestQuality: "Best (Highest Quality)",
+        mp3Audio: "MP3 Audio (320kbps)",
+        heroSub: "Grab videos from YouTube, TikTok, Facebook, Instagram and more in seconds, up to 4K and with no logo.",
+        heroStart: "Start Downloading",
+        heroHistory: "View History"
+      }
+    };
+
+    let currentLang = localStorage.getItem('cps_lang') || 'km';
+    let currentVideoData = null;
+    let selectedQuality = "Best (ច្បាស់បំផុត)";
+    let activePollers = {};
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('cps_lang', lang);
+
+      // Buttons
+      document.getElementById('btnLangKm').classList.toggle('active', lang === 'km');
+      document.getElementById('btnLangEn').classList.toggle('active', lang === 'en');
+
+      const t = i18n[lang];
+      document.getElementById('lblSubTitle').innerText = t.subTitle;
+      document.getElementById('btnOpenFolderText').innerText = t.openFolder;
+      document.getElementById('tabDownloaderText').innerText = t.tabDownloader;
+      document.getElementById('tabHistoryText').innerText = t.tabHistory;
+      document.getElementById('tabSettingsText').innerText = t.tabSettings;
+      document.getElementById('urlInput').placeholder = t.placeholder;
+      document.getElementById('btnPasteText').innerText = t.paste;
+      document.getElementById('btnAnalyzeText').innerText = t.analyzeBtn;
+      document.getElementById('lblSupportedPlatforms').innerText = t.supportedPlatforms;
+      document.getElementById('lblSelectQuality').innerText = t.selectQuality;
+      document.getElementById('btnDownloadText').innerText = t.downloadNow;
+      document.getElementById('lblActiveDownloads').innerText = t.activeDownloads;
+      document.getElementById('lblHistoryTitle').innerText = t.downloadHistory;
+      document.getElementById('lblSettingsTitle').innerText = t.systemSettings;
+      document.getElementById('lblSettingFolder').innerText = t.settingFolder;
+      document.getElementById('btnExplore').innerText = t.explore;
+      document.getElementById('lblEngineStatus').innerText = t.engineStatus;
+      document.getElementById('lblEngineDesc').innerHTML = `<span class="status-dot"></span> ${t.engineDesc}`;
+      document.getElementById('lblMaxSpeed').innerText = t.performance;
+      document.getElementById('lblMaxSpeedDesc').innerText = t.performanceDesc;
+      document.getElementById('lblHeroSub').innerText = t.heroSub;
+      document.getElementById('btnHeroStart').innerText = t.heroStart;
+      document.getElementById('btnHeroHistory').innerText = t.heroHistory;
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+
+      if (tab === 'downloader') {
+        document.getElementById('tabDownloader').classList.add('active');
+        document.getElementById('viewDownloader').classList.add('active');
+      } else if (tab === 'history') {
+        document.getElementById('tabHistory').classList.add('active');
+        document.getElementById('viewHistory').classList.add('active');
+        loadHistory();
+      } else if (tab === 'settings') {
+        document.getElementById('tabSettings').classList.add('active');
+        document.getElementById('viewSettings').classList.add('active');
+      }
+    }
+
+    async function pasteClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('urlInput').value = text.trim();
+          handleAnalyze();
+        }
+      } catch (e) {
+        alert("សូមចុច Command + V ដើម្បី Paste Link ចូលក្នុងប្រអប់បាទ (Press Cmd+V to paste)");
+      }
+    }
+
+    async function openDownloadsFolder() {
+      try { await macFetch('/api/open-folder', { method: 'POST' }); } catch (error) { alert(error.message); }
+    }
+
+    async function handleAnalyze() {
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url) {
+        alert(currentLang === 'km' ? "សូមបញ្ចូល Link វីដេអូមុននឹងវិភាគ!" : "Please enter a video URL first!");
+        return;
+      }
+
+      const btn = document.getElementById('btnAnalyze');
+      const btnText = document.getElementById('btnAnalyzeText');
+      btn.disabled = true;
+      btnText.innerHTML = `<span class="spinner"></span> ${i18n[currentLang].analyzing}`;
+
+      try {
+        const res = await macFetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+
+        if (!data.ok) {
+          alert("បរាជ័យ: " + (data.error || "មិនអាចទាញយកព័ត៌មានវីដេអូនេះបានឡើយ"));
+          return;
+        }
+
+        currentVideoData = data;
+        renderPreview(data);
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = i18n[currentLang].analyzeBtn;
+      }
+    }
+
+    function renderPreview(data) {
+      document.getElementById('previewCard').style.display = 'flex';
+      document.getElementById('thumbImg').src = data.thumbnail || '';
+      document.getElementById('mediaTitle').innerText = data.title;
+      
+      const mins = Math.floor(data.duration / 60);
+      const secs = data.duration % 60;
+      const durStr = data.duration ? `${mins}:${secs < 10 ? '0' : ''}${secs}` : '';
+      document.getElementById('thumbDuration').innerText = durStr || 'HD';
+      document.getElementById('mediaUploader').innerText = data.uploader || 'Creator';
+
+      const grid = document.getElementById('qualityGrid');
+      grid.innerHTML = '';
+      selectedQuality = data.qualities[0] || 'Best';
+
+      data.qualities.forEach((q, idx) => {
+        const opt = document.createElement('div');
+        opt.className = `quality-btn ${idx === 0 ? 'active' : ''}`;
+        
+        let desc = "MP4 Video";
+        let icon = "🎬";
+        if (q.includes("Best")) { desc = "Highest Resolution"; icon = "🌟"; }
+        if (q.includes("1080")) { desc = "1920x1080 FHD"; icon = "✨"; }
+        if (q.includes("720")) { desc = "1280x720 HD"; icon = "📺"; }
+        if (q.includes("MP3")) { desc = "320kbps Audio"; icon = "🎵"; }
+
+        opt.innerHTML = `
+          <div class="quality-label"><span>${icon}</span> <span>${q}</span></div>
+          <div class="quality-desc">${desc}</div>
+        `;
+        opt.onclick = () => {
+          document.querySelectorAll('.quality-btn').forEach(el => el.classList.remove('active'));
+          opt.classList.add('active');
+          selectedQuality = q;
+        };
+        grid.appendChild(opt);
+      });
+
+      document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function handleDownload() {
+      if (!currentVideoData) return;
+
+      const btn = document.getElementById('btnDownload');
+      const btnText = document.getElementById('btnDownloadText');
+      btn.disabled = true;
+      btnText.innerHTML = `<span class="spinner"></span> ${i18n[currentLang].starting}`;
+
+      const mode = selectedQuality.includes("MP3") ? "audio" : "video";
+
+      try {
+        const res = await macFetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: currentVideoData.url,
+            mode: mode,
+            quality: selectedQuality,
+            title: currentVideoData.title,
+            thumbnail: currentVideoData.thumbnail
+          })
+        });
+        const data = await res.json();
+        if (data.ok && data.job_id) {
+          startTrackingJob(data.job_id, currentVideoData.title);
+          document.getElementById('urlInput').value = '';
+          document.getElementById('previewCard').style.display = 'none';
+          currentVideoData = null;
+        } else {
+          alert("Error: " + (data.error || "Unknown error"));
+        }
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = i18n[currentLang].downloadNow;
+      }
+    }
+
+    function startTrackingJob(jobId, title) {
+      document.getElementById('activeTasksSection').style.display = 'flex';
+      const container = document.getElementById('tasksContainer');
+
+      const card = document.createElement('div');
+      card.className = 'task-card';
+      card.id = `job-${jobId}`;
+      card.innerHTML = `
+        <div class="task-top">
+          <div class="task-title" title="${escapeMarkup(title)}">${escapeMarkup(title)}</div>
+          <div class="task-status-pill" id="status-${jobId}">0%</div>
+        </div>
+        <div class="task-progress-track">
+          <div class="task-progress-fill" id="fill-${jobId}"></div>
+        </div>
+        <div class="task-metrics">
+          <span id="speed-${jobId}">${i18n[currentLang].connecting}</span>
+          <span id="eta-${jobId}"></span>
+        </div>
+        <div class="task-actions" id="actions-${jobId}" style="display: none;">
+          <button class="btn-icon-text" onclick="openDownloadsFolder()" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>${i18n[currentLang].openInFinder}</span>
+          </button>
+        </div>
+      `;
+      container.prepend(card);
+
+      const poller = setInterval(async () => {
+        try {
+          const r = await macFetch(`/api/progress/${jobId}`);
+          const res = await r.json();
+          if (res.ok && res.job) {
+            const j = res.job;
+            const pct = Math.round(j.percent || 0);
+            document.getElementById(`fill-${jobId}`).style.width = pct + '%';
+            
+            if (j.status === 'downloading') {
+              document.getElementById(`status-${jobId}`).innerText = pct + '%';
+              document.getElementById(`speed-${jobId}`).innerText = j.speed ? `${i18n[currentLang].speed}: ${j.speed}` : i18n[currentLang].connecting;
+              document.getElementById(`eta-${jobId}`).innerText = j.eta ? `${i18n[currentLang].eta}: ${j.eta}` : '';
+            } else if (j.status === 'processing') {
+              document.getElementById(`status-${jobId}`).innerText = i18n[currentLang].merging;
+              document.getElementById(`status-${jobId}`).style.color = '#ffc53d';
+            } else if (j.status === 'completed') {
+              clearInterval(poller);
+              document.getElementById(`status-${jobId}`).innerText = i18n[currentLang].done;
+              document.getElementById(`status-${jobId}`).style.color = '#34d399';
+              document.getElementById(`fill-${jobId}`).style.width = '100%';
+              document.getElementById(`actions-${jobId}`).style.display = 'flex';
+              loadHistory();
+            } else if (j.status === 'failed') {
+              clearInterval(poller);
+              document.getElementById(`status-${jobId}`).innerText = i18n[currentLang].failed;
+              document.getElementById(`status-${jobId}`).style.color = '#fb7185';
+            }
+          }
+        } catch (e) {}
+      }, 750);
+
+      activePollers[jobId] = poller;
+    }
+
+    async function loadHistory() {
+      try {
+        const r = await macFetch('/api/history');
+        const res = await r.json();
+        const list = document.getElementById('historyList');
+        if (res.ok && res.history && res.history.length > 0) {
+          list.innerHTML = '';
+          res.history.slice().reverse().forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+              <div class="history-name" title="${escapeMarkup(item.title)}">${escapeMarkup(item.title)}</div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span style="font-size: 0.72rem; color: #94a3b8; background: rgba(255,255,255,0.06); padding: 0.2rem 0.5rem; border-radius: 6px;">${escapeMarkup(item.quality)}</span>
+                <button class="btn-icon-text" data-open-history style="padding: 0.35rem 0.65rem; font-size: 0.75rem;">
+                  <span>${currentLang === 'km' ? 'បើកមើល' : 'Open'}</span>
+                </button>
+              </div>
+            `;
+            div.querySelector('[data-open-history]').addEventListener('click',()=>openFile(item.filename));
+            list.appendChild(div);
+          });
+        }
+      } catch (e) {}
+    }
+
+    async function openFile(filename) {
+      if (!filename) {
+        openDownloadsFolder();
+        return;
+      }
+      try { await macFetch('/api/open-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+      }); } catch (error) { alert(error.message); }
+    }
+
+    // Initialize Language
+    setLanguage(currentLang);
+
+    // Enter key triggers analysis
+    document.getElementById('urlInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAnalyze();
+    });
+  </script>
+</body>
+</html>
