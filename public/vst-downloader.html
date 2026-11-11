@@ -659,7 +659,7 @@
     <div class="view-section" id="viewSettings">
       <div class="card">
         <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;" id="lblSettingsTitle">ការកំណត់ប្រព័ន្ធ (System Settings)</h3>
-        
+
         <div class="setting-row">
           <div class="setting-info">
             <h4 id="lblSettingFolder">ថតរក្សាទុក (Downloads Directory)</h4>
@@ -700,9 +700,9 @@
         const button=document.getElementById('connectMac');
         const status=document.getElementById('macStatus');
         const help=document.getElementById('macHelp');
-        button.disabled=true;status.textContent='កំពុងភ្ជាប់ Mac…';
+        button.disabled=true;status.textContent='កំពុងភ្ជាប់ Mac… សូមចុច Allow ប្រសិនបើ Browser សួរ';
         try{
-          const response=await fetch(MAC_ORIGIN+'/api/status',{mode:'cors',credentials:'omit',targetAddressSpace:'loopback',signal:AbortSignal.timeout(8000)});
+          const response=await fetch(MAC_ORIGIN+'/api/status',{mode:'cors',credentials:'omit',targetAddressSpace:'loopback',signal:AbortSignal.timeout(60000)});
           const data=await response.json();
           if(!response.ok||!data.ok)throw new Error('Mac unavailable');
           macConnected=true;
@@ -917,7 +917,7 @@
       document.getElementById('previewCard').style.display = 'flex';
       document.getElementById('thumbImg').src = data.thumbnail || '';
       document.getElementById('mediaTitle').innerText = data.title;
-      
+
       const mins = Math.floor(data.duration / 60);
       const secs = data.duration % 60;
       const durStr = data.duration ? `${mins}:${secs < 10 ? '0' : ''}${secs}` : '';
@@ -931,7 +931,7 @@
       data.qualities.forEach((q, idx) => {
         const opt = document.createElement('div');
         opt.className = `quality-btn ${idx === 0 ? 'active' : ''}`;
-        
+
         let desc = "MP4 Video";
         let icon = "🎬";
         if (q.includes("Best")) { desc = "Highest Resolution"; icon = "🌟"; }
@@ -1029,7 +1029,7 @@
             const j = res.job;
             const pct = Math.round(j.percent || 0);
             document.getElementById(`fill-${jobId}`).style.width = pct + '%';
-            
+
             if (j.status === 'downloading') {
               document.getElementById(`status-${jobId}`).innerText = pct + '%';
               document.getElementById(`speed-${jobId}`).innerText = j.speed ? `${i18n[currentLang].speed}: ${j.speed}` : i18n[currentLang].connecting;
