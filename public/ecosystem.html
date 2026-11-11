@@ -2028,12 +2028,13 @@
       const closeBtn = document.getElementById('modalCloseBtn');
       const cards=[...document.querySelectorAll('.app-card')];
       const choice=document.getElementById('appChoice'),input=document.getElementById('appUrl'),feedback=document.getElementById('linkFeedback'),launch=document.getElementById('launchSaved');
-      const defaults={'VST ERP':'https://vst-intelligence-dashboard.sethavann.chatgpt.site/','VST Voice Studio':'https://voice.vannsitha.com/','VST Downloader':'http://127.0.0.1:38473/','VST Sales Coach':'https://vst-sales-coach-ai.ai.studio/','VST AI Sale':new URL('/sale-studio',location.origin).href,'VST Meta Auto':'https://localhost:3443/','VST Kot Luy':'http://localhost:3000/','VST OpenClaw':'https://openclaw.139-180-143-33.sslip.io/chat/main'};
+      const defaults={'VST ERP':'https://vst-intelligence-dashboard.sethavann.chatgpt.site/','VST Voice Studio':'https://voice.vannsitha.com/','VST Downloader':new URL('/vst_downloader',location.origin).href,'VST Sales Coach':'https://vst-sales-coach-ai.ai.studio/','VST AI Sale':new URL('/sale-studio',location.origin).href,'VST Meta Auto':'https://localhost:3443/','VST Kot Luy':'http://localhost:3000/','VST OpenClaw':'https://openclaw.139-180-143-33.sslip.io/chat/main'};
       const key='vst-ecosystem-production-links-v1';
       const urls={...defaults};
       function safeUrl(value){try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:'';}catch{return '';}}
       try{
         const saved=JSON.parse(localStorage.getItem(key));
+        if(typeof saved?.['VST Downloader']==='string'&&/^http:\/\/(127\.0\.0\.1|localhost):38473\/?$/.test(saved['VST Downloader']))saved['VST Downloader']=defaults['VST Downloader'];
         const previousNames={'Khmer Voice Studio':'VST Voice Studio','AI Sale Studio':'VST AI Sale','Kot Luy':'VST Kot Luy','OpenClaw':'VST OpenClaw'};
         for(const [previous,current] of Object.entries(previousNames))if(typeof saved?.[previous]==='string'&&typeof saved?.[current]!=='string')saved[current]=saved[previous];
         for(const name of Object.keys(defaults))if(typeof saved?.[name]==='string')urls[name]=safeUrl(saved[name]);
