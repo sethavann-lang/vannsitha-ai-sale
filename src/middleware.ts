@@ -35,8 +35,9 @@ export async function middleware(req: NextRequest) {
   const session = await verifySessionToken(token);
 
   // Return sales-app visitors to their workspace after sign-in.
-  const loginDestination = req.nextUrl.searchParams.get("next") === "/sale-studio"
-    ? "/sale-studio" : "/";
+  const requestedDestination = req.nextUrl.searchParams.get("next");
+  const loginDestination = requestedDestination === "/sale-studio" || requestedDestination === "/vst_downloader"
+    ? requestedDestination : "/";
   if (pathname === "/login" && session.valid) {
     return NextResponse.redirect(new URL(loginDestination, req.url));
   }
@@ -48,9 +49,9 @@ export async function middleware(req: NextRequest) {
 
   // Allow authenticated requests
   if (session.valid) {
-    if (pathname === "/") {
+    if (pathname === "/" || pathname === "/vst_downloader") {
       const hub = req.nextUrl.clone();
-      hub.pathname = "/ecosystem.html";
+      hub.pathname = pathname === "/vst_downloader" ? "/vst-downloader.html" : "/ecosystem.html";
       const response = NextResponse.rewrite(hub);
       response.headers.set("Cache-Control", "private, no-store");
       return response;
@@ -69,7 +70,9 @@ export async function middleware(req: NextRequest) {
 
   // Unauthorized Page routes redirect cleanly to /login
   const login = new URL("/login", req.url);
-  if (pathname === "/sale-studio") login.searchParams.set("next", "/sale-studio");
+  if (pathname === "/sale-studio" || pathname === "/vst_downloader" || pathname === "/vst-downloader.html") {
+    login.searchParams.set("next", pathname === "/sale-studio" ? "/sale-studio" : "/vst_downloader");
+  }
   return NextResponse.redirect(login);
 }
 
